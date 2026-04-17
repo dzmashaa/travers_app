@@ -1,6 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travers_app/screens/competitions.dart';
 import 'package:travers_app/screens/home.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:travers_app/services/storage_service.dart';
+import 'firebase_options.dart';
 
 final theme = ThemeData(
   useMaterial3: true,
@@ -34,15 +39,30 @@ final theme = ThemeData(
   ),
 );
 
-void main() {
-  runApp(const App());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final savedRole = await StorageService.getRole();
+  final user = FirebaseAuth.instance.currentUser;
+
+  bool isReady = user != null && savedRole != null;
+  runApp(
+    TraversCoreApp(
+      startScreen: /* isReady
+          ? CompetitionsScreen(userRole: savedRole)
+          : */
+          HomeScreen(),
+    ),
+  );
 }
 
-class App extends StatelessWidget {
-  const App({super.key});
+class TraversCoreApp extends StatelessWidget {
+  final Widget startScreen;
+  const TraversCoreApp({super.key, required this.startScreen});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(theme: theme, home: HomeScreen());
+    return MaterialApp(theme: theme, home: startScreen);
   }
 }

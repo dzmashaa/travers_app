@@ -42,7 +42,10 @@ class CustomTextFieldState extends State<CustomTextField> {
       obscureText: _obscureText,
       keyboardType: widget.keyboardType,
       validator: widget.validator,
-      style: theme.textTheme.bodyLarge,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: Colors.black,
+        fontWeight: FontWeight.bold,
+      ),
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,

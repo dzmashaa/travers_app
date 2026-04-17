@@ -1,7 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travers_app/models/user_role.dart';
 import 'package:travers_app/screens/competitions.dart';
+import 'package:travers_app/services/storage_service.dart';
 import 'package:travers_app/widgets/custom_text_field.dart';
+
+final _firebase = FirebaseAuth.instance;
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, required this.wantsHeadJudgeRole});
@@ -15,7 +19,7 @@ class AuthScreen extends StatefulWidget {
 
 class AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
-  var _isLogin = false;
+  var _isLogin = true;
   var _isLoading = false;
 
   final _emailController = TextEditingController();
@@ -35,37 +39,59 @@ class AuthScreenState extends State<AuthScreen> {
   }
 
   void _submit() async {
-    /*     final isValid = _formKey.currentState!.validate();
-    if (!isValid || !_isLogin) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Коректно заповніть виділені поля та повторіть спробу'),
-        ),
-      );
-      return;
-    } */
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    //Firebase
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
 
-    // 2. Імітуємо запит до сервера (потім тут буде Firebase)
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (widget.wantsHeadJudgeRole) {
-      _showCodeDialog();
-      //_navigateToCompetitions(UserRole.headJudge);
-    } else {
-      _navigateToCompetitions(UserRole.judge);
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      if (_isLogin) {
+        await _firebase.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } else {
+        UserCredential userCredentials = await _firebase
+            .createUserWithEmailAndPassword(email: email, password: password);
+        await userCredentials.user?.updateDisplayName(
+          _nameController.text.trim(),
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      if (widget.wantsHeadJudgeRole) {
+        _showCodeDialog();
+      } else {
+        _navigateToCompetitions(UserRole.judge);
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      String errorMessage = 'Сталася помилка автентифікації';
+      if (e.code == 'invalid-credential') {
+        errorMessage = 'Невірний email або пароль.';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'Акаунт з таким email вже існує.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Невірний формат email.';
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -103,7 +129,7 @@ class AuthScreenState extends State<AuthScreen> {
               child: const Text('Продовжити як Суддя'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_codeController.text.trim() == '1234') {
                   Navigator.of(context).pop();
                   _navigateToCompetitions(UserRole.headJudge);
@@ -127,12 +153,102 @@ class AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  void _navigateToCompetitions(UserRole role) {
+  void _navigateToCompetitions(UserRole role) async {
+    await StorageService.saveRole(role);
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => CompetitionsScreen(userRole: role),
       ),
+    );
+  }
+
+  Future<void> _resetPassword() async {
+    final resetEmailController = TextEditingController(
+      text: _emailController.text,
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Відновлення пароля'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Введіть ваш email, і ми надішлемо посилання для скидання пароля.',
+              ),
+              const SizedBox(height: 16),
+              CustomTextField(
+                controller: resetEmailController,
+                label: '',
+                keyboardType: TextInputType.emailAddress,
+                icon: Icons.mail_outline,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+              child: Text(
+                'Скасувати',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = resetEmailController.text.trim();
+                if (email.isEmpty || !email.contains('@')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Будь ласка, введіть коректний email'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  Navigator.of(ctx).pop();
+                  await FirebaseAuth.instance.sendPasswordResetEmail(
+                    email: email,
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Посилання для відновлення надіслано! Перевірте пошту.',
+                      ),
+                      backgroundColor: Theme.of(context).primaryColor,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } on FirebaseAuthException catch (e) {
+                  String errorMsg = 'Сталася помилка. Спробуйте пізніше.';
+                  if (e.code == 'invalid-email') {
+                    errorMsg = 'Невірний формат email.';
+                  }
+
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMsg),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Надіслати'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -229,7 +345,7 @@ class AuthScreenState extends State<AuthScreen> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () {},
+                                    onPressed: _resetPassword,
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 4,

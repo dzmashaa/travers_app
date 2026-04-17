@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travers_app/screens/auth.dart';
 import 'package:travers_app/screens/competitions.dart';
@@ -82,15 +83,23 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.leaderboard_outlined,
                 iconBgColor: const Color(0xFFE0F2F1),
                 iconColor: Colors.teal.shade700,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CompetitionsScreen(
-                        userRole: UserRole.participant,
+                onTap: () async {
+                  try {
+                    await FirebaseAuth.instance.signInAnonymously();
+                    if (!context.mounted) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CompetitionsScreen(
+                          userRole: UserRole.participant,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Помилка входу: $e')),
+                    );
+                  }
                 },
               ),
             ],

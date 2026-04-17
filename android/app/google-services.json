@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "211565996613",
+    "project_id": "traverscore",
+    "storage_bucket": "traverscore.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:211565996613:android:657b592317edd7bfcb112c",
+        "android_client_info": {
+          "package_name": "com.example.travers_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANs8lCrsxcGkk2tWNX-vE7vpOpTN3g7xY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
