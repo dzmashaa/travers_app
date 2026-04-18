@@ -1,15 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/role_provider.dart';
 import 'package:travers_app/screens/auth.dart';
 import 'package:travers_app/screens/competitions.dart';
+import 'package:travers_app/services/auth_service.dart';
+import 'package:travers_app/utils/snackbar_utils.dart';
 import 'package:travers_app/widgets/role_card.dart';
-import 'package:travers_app/models/user_role.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -85,20 +88,19 @@ class HomeScreen extends StatelessWidget {
                 iconColor: Colors.teal.shade700,
                 onTap: () async {
                   try {
-                    await FirebaseAuth.instance.signInAnonymously();
+                    await AuthService().signInAnonymously();
                     if (!context.mounted) return;
+                    await ref
+                        .read(roleProvider.notifier)
+                        .setRole(UserRole.participant);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CompetitionsScreen(
-                          userRole: UserRole.participant,
-                        ),
+                        builder: (context) => const CompetitionsScreen(),
                       ),
                     );
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Помилка входу: $e')),
-                    );
+                    SnackbarUtils.show(context, 'Помилка входу: $e');
                   }
                 },
               ),

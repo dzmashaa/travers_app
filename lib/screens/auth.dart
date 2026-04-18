@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/screens/competitions.dart';
+import 'package:travers_app/providers/role_provider.dart';
+import 'package:travers_app/screens/main_shell.dart';
 import 'package:travers_app/services/auth_service.dart';
-import 'package:travers_app/services/storage_service.dart';
 import 'package:travers_app/utils/snackbar_utils.dart';
 import 'package:travers_app/widgets/custom_text_field.dart';
 
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key, required this.wantsHeadJudgeRole});
   final bool wantsHeadJudgeRole;
 
   @override
-  State<StatefulWidget> createState() {
+  ConsumerState<AuthScreen> createState() {
     return AuthScreenState();
   }
 }
 
-class AuthScreenState extends State<AuthScreen> {
+class AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   var _isLogin = true;
   var _isLoading = false;
@@ -129,13 +130,11 @@ class AuthScreenState extends State<AuthScreen> {
   }
 
   void _navigateToCompetitions(UserRole role) async {
-    await StorageService.saveRole(role);
+    await ref.read(roleProvider.notifier).setRole(role);
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => CompetitionsScreen(userRole: role),
-      ),
+      MaterialPageRoute(builder: (context) => MainShell()),
     );
   }
 
@@ -211,6 +210,26 @@ class AuthScreenState extends State<AuthScreen> {
         );
       },
     );
+  }
+
+  void _googleAuth() async {
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signInWithGoogle();
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (widget.wantsHeadJudgeRole) {
+        _showCodeDialog();
+      } else {
+        _navigateToCompetitions(UserRole.judge);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      SnackbarUtils.show(context, e.toString());
+    }
   }
 
   Widget _buildHeader(ThemeData theme) {
@@ -369,10 +388,10 @@ class AuthScreenState extends State<AuthScreen> {
               const Text('або', style: TextStyle(color: Colors.black45)),
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: _isLoading ? null : _googleAuth,
                 icon: Image.asset('assets/search.png', height: 20),
                 label: const Text(
-                  'Увійти через Google',
+                  'Продовжити з Google',
                   style: TextStyle(color: Colors.black87),
                 ),
                 style: OutlinedButton.styleFrom(

@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travers_app/models/user_role.dart';
 import 'package:travers_app/screens/competitions.dart';
 import 'package:travers_app/screens/home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:travers_app/screens/main_shell.dart';
 import 'package:travers_app/services/storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 
 final theme = ThemeData(
@@ -45,16 +48,17 @@ void main() async {
 
   final savedRole = await StorageService.getRole();
   final user = FirebaseAuth.instance.currentUser;
-
-  bool isReady = user != null && savedRole != null;
-  runApp(
-    TraversCoreApp(
-      startScreen: /* isReady
-          ? CompetitionsScreen(userRole: savedRole)
-          : */
-          HomeScreen(),
-    ),
-  );
+  Widget initialScreen;
+  if (user != null && savedRole != null) {
+    if (savedRole == UserRole.participant) {
+      initialScreen = const CompetitionsScreen();
+    } else {
+      initialScreen = MainShell();
+    }
+  } else {
+    initialScreen = const HomeScreen();
+  }
+  runApp(ProviderScope(child: TraversCoreApp(startScreen: initialScreen)));
 }
 
 class TraversCoreApp extends StatelessWidget {

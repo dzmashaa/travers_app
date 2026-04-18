@@ -66,6 +66,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '211565996613',
     projectId: 'traverscore',
     storageBucket: 'traverscore.firebasestorage.app',
+    androidClientId: '211565996613-sinr57juugvkkuhgvgug45q4sca1d2nv.apps.googleusercontent.com',
+    iosClientId: '211565996613-ei1icrlckl5fvu154i2ti6nfrkoshfmq.apps.googleusercontent.com',
     iosBundleId: 'com.example.traversApp',
   );
 
@@ -77,4 +79,5 @@ class DefaultFirebaseOptions {
     authDomain: 'traverscore.firebaseapp.com',
     storageBucket: 'traverscore.firebasestorage.app',
   );
+
 }

@@ -12,7 +12,20 @@
           "package_name": "com.example.travers_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "211565996613-sinr57juugvkkuhgvgug45q4sca1d2nv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.travers_app",
+            "certificate_hash": "c98f5bd0738b4df4a4a28a6e2ed9ee6b765c859e"
+          }
+        },
+        {
+          "client_id": "211565996613-93ps2j29so8hbqv436tg8vksorm3lu0g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyANs8lCrsxcGkk2tWNX-vE7vpOpTN3g7xY"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "211565996613-93ps2j29so8hbqv436tg8vksorm3lu0g.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "211565996613-ei1icrlckl5fvu154i2ti6nfrkoshfmq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.traversApp"
+              }
+            }
+          ]
         }
       }
     }

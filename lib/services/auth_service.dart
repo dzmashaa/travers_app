@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   Future<void> signUp(String email, String password, String name) async {
     try {
@@ -24,6 +26,16 @@ class AuthService {
     }
   }
 
+  Future<void> signInAnonymously() async {
+    try {
+      await _firebaseAuth.signInAnonymously();
+    } on FirebaseAuthException catch (e) {
+      throw _translateAuthError(e);
+    } catch (e) {
+      throw 'Помилка анонімного входу: $e';
+    }
+  }
+
   Future<void> resetPassword(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
@@ -32,8 +44,28 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
-    await _firebaseAuth.signOut();
+  Future<void> signInWithGoogle() async {
+    try {
+      await _googleSignIn.initialize();
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
+
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      await _firebaseAuth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _translateAuthError(e);
+    } catch (e) {
+      throw 'Помилка входу через Google: $e';
+    }
   }
 
   String _translateAuthError(FirebaseAuthException e) {

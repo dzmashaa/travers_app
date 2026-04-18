@@ -1,31 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/role_provider.dart';
 
-class CompetitionsScreen extends StatefulWidget {
-  final UserRole userRole;
-  const CompetitionsScreen({super.key, required this.userRole});
-
+class CompetitionsScreen extends ConsumerWidget {
+  const CompetitionsScreen({super.key});
   @override
-  State<CompetitionsScreen> createState() => _CompetitionsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(roleProvider).value;
+    final isHeadJudge = role == UserRole.headJudge;
 
-class _CompetitionsScreenState extends State<CompetitionsScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final isHeadJudge = widget.userRole == UserRole.headJudge;
-    final isJudge = widget.userRole == UserRole.judge;
-    final isParticipant = widget.userRole == UserRole.participant;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Змагання'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Змагання',
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
       body: Center(
         child: Column(
           children: [
-            if (isParticipant) Text('Привіт, учасник!'),
-            if (isJudge) Text('Привіт, суддя!'),
+            if (role == UserRole.participant) Text('Привіт, учасник!'),
+            if (role == UserRole.judge) Text('Привіт, суддя!'),
             if (isHeadJudge) Text('Привіт, головний суддя!'),
             Text(
               'Тут будуть всі змагання',
@@ -34,6 +31,15 @@ class _CompetitionsScreenState extends State<CompetitionsScreen> {
           ],
         ),
       ),
+      floatingActionButton: (isHeadJudge)
+          ? FloatingActionButton(
+              onPressed: () {
+                // TODO: Додавання змагання
+              },
+              backgroundColor: const Color(0xFF2E7D32),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            )
+          : null,
     );
   }
 }
