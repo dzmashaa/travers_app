@@ -9,6 +9,7 @@ import 'package:travers_app/screens/main_shell.dart';
 import 'package:travers_app/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final theme = ThemeData(
   useMaterial3: true,
@@ -45,7 +46,10 @@ final theme = ThemeData(
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
   final savedRole = await StorageService.getRole();
   final user = FirebaseAuth.instance.currentUser;
   Widget initialScreen;
