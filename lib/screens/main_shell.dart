@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/screens/competitions.dart';
+import 'package:travers_app/screens/judging.dart';
 import 'package:travers_app/screens/profile.dart';
 
 class MainShell extends StatefulWidget {
@@ -13,7 +14,7 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   final List<Widget> _pages = const [
     CompetitionsScreen(),
-    //JudgingScreen(),
+    JudgingScreen(),
     ProfileScreen(),
   ];
 
