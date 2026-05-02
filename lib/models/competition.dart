@@ -49,8 +49,8 @@ class CompetitionModel {
       inviteCode: map['inviteCode'] ?? '',
       distances:
           (map['distances'] as List<dynamic>?)
-              ?.where((e) => e is Map<String, dynamic>)
-              .map((e) => Distance.fromMap(e as Map<String, dynamic>))
+              ?.whereType<Map<String, dynamic>>()
+              .map((e) => Distance.fromMap(e))
               .toList() ??
           [],
     );
