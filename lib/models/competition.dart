@@ -3,6 +3,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CompetitionStatus { upcoming, active, completed }
 
+extension CompetitionStatusExtension on CompetitionStatus {
+  String get displayName {
+    switch (this) {
+      case CompetitionStatus.active:
+        return 'Триває';
+      case CompetitionStatus.upcoming:
+        return 'Майбутнє';
+      case CompetitionStatus.completed:
+        return 'Завершено';
+    }
+  }
+}
+
 class CompetitionModel {
   final String id;
   final String title;

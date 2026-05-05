@@ -4,15 +4,41 @@ enum DistanceType { obstacleCourse, crossHike, rescueWork }
 
 enum DistanceView { individual, team, pair }
 
+extension DistanceTypeExtension on DistanceType {
+  String get displayName {
+    switch (this) {
+      case DistanceType.obstacleCourse:
+        return 'Смуга перешкод';
+      case DistanceType.crossHike:
+        return 'Крос-похід';
+      case DistanceType.rescueWork:
+        return 'Рятувальні роботи';
+    }
+  }
+}
+
+extension DistanceViewExtension on DistanceView {
+  String get displayName {
+    switch (this) {
+      case DistanceView.individual:
+        return 'Особиста';
+      case DistanceView.team:
+        return 'Командна';
+      case DistanceView.pair:
+        return 'Зв\'язки';
+    }
+  }
+}
+
 class Distance {
-  final String name;
+  final String? description;
   final DistanceType type;
-  final int classLevel; // від 1 до 6
+  final int classLevel;
   final DistanceView view;
   final List<StageBlock> stageBlocks;
 
   Distance({
-    required this.name,
+    this.description,
     required this.type,
     required this.classLevel,
     required this.view,
@@ -21,7 +47,7 @@ class Distance {
 
   factory Distance.fromMap(Map<String, dynamic> map) {
     return Distance(
-      name: map['name'] ?? '',
+      description: map['name'] ?? '',
       type: DistanceType.values.firstWhere(
         (e) => e.toString().split('.').last == map['type'],
         orElse: () => DistanceType.obstacleCourse,
@@ -41,7 +67,7 @@ class Distance {
 
   Map<String, dynamic> toMap() {
     return {
-      'name': name,
+      'description': description,
       'type': type.toString().split('.').last,
       'classLevel': classLevel,
       'view': view.toString().split('.').last,
