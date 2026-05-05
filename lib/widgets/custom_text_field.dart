@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:travers_app/utils/app_decorations.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
-    required this.controller,
+    this.controller,
     required this.label,
     required this.icon,
+    this.initialValue,
     this.isPassword = false,
     this.keyboardType,
     this.validator,
+    this.onSaved,
   });
 
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final String label;
   final IconData icon;
+  final String? initialValue;
   final bool isPassword;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final void Function(String?)? onSaved;
 
   @override
   State<StatefulWidget> createState() {
@@ -36,58 +41,39 @@ class CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderRadius = BorderRadius.circular(30);
+
     return TextFormField(
+      initialValue: widget.initialValue,
       controller: widget.controller,
       obscureText: _obscureText,
       keyboardType: widget.keyboardType,
       validator: widget.validator,
+      onSaved: widget.onSaved,
       style: theme.textTheme.bodyMedium?.copyWith(
         color: Colors.black,
         fontWeight: FontWeight.bold,
       ),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        prefixIcon: Icon(widget.icon, color: Colors.black54),
-        label: Text(
-          widget.label,
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black45),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: borderRadius,
-          borderSide: const BorderSide(color: Colors.black12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: borderRadius,
-          borderSide: const BorderSide(color: Colors.black12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: borderRadius,
-          borderSide: BorderSide(color: theme.primaryColor, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: borderRadius,
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-        suffixIcon: widget.isPassword
-            ? IconButton(
-                icon: Icon(
-                  _obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.black38,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureText = !_obscureText;
-                  });
-                },
-              )
-            : null,
-      ),
+
+      decoration:
+          AppDecorations.inputField(
+            theme: theme,
+            label: widget.label,
+            icon: widget.icon,
+          ).copyWith(
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.black38,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
+                : null,
+          ),
     );
   }
 }
