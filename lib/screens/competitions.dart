@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/comp_filter_provider.dart';
 import 'package:travers_app/providers/role_provider.dart';
+import 'package:travers_app/screens/add_competition.dart';
+import 'package:travers_app/screens/competition_details.dart';
+import 'package:travers_app/widgets/competition_card.dart';
 
-class CompetitionsScreen extends ConsumerWidget {
+class CompetitionsScreen extends ConsumerStatefulWidget {
   const CompetitionsScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CompetitionsScreen> createState() => _CompetitionsScreenState();
+}
+
+class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final role = ref.watch(roleProvider).value;
     final isHeadJudge = role == UserRole.headJudge;
 
@@ -18,28 +28,144 @@ class CompetitionsScreen extends ConsumerWidget {
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
-      body: Center(
+      body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (role == UserRole.participant) Text('Привіт, учасник!'),
-            if (role == UserRole.judge) Text('Привіт, суддя!'),
-            if (isHeadJudge) Text('Привіт, головний суддя!'),
-            Text(
-              'Тут будуть всі змагання',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            _FilterBar(),
+            const SizedBox(height: 12),
+            _CompetitionsList(),
           ],
         ),
       ),
       floatingActionButton: (isHeadJudge)
-          ? FloatingActionButton(
-              onPressed: () {
-                // TODO: Додавання змагання
-              },
-              backgroundColor: const Color(0xFF2E7D32),
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 16, right: 4),
+              child: FloatingActionButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddCompetitionScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: theme.primaryColor,
+                child: const Icon(Icons.add, color: Colors.white, size: 28),
+              ),
             )
           : null,
+    );
+  }
+}
+
+class _FilterBar extends ConsumerWidget {
+  const _FilterBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final selectedFilter = ref.watch(competitionFilterProvider);
+    return SizedBox(
+      height: 35,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: CompetitionFilter.values.length,
+        itemBuilder: (context, index) {
+          final filter = CompetitionFilter.values[index];
+          final isSelected = selectedFilter == filter;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () =>
+                  ref.read(competitionFilterProvider.notifier).state = filter,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.primaryColor : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.primaryColor
+                        : Colors.grey.shade300,
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  filter.displayName,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontSize: 12,
+                    color: isSelected
+                        ? Colors.white
+                        : theme.textTheme.bodyMedium?.color,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CompetitionsList extends ConsumerWidget {
+  const _CompetitionsList();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final filteredAsyncValue = ref.watch(filteredCompetitionsProvider);
+    ;
+
+    return Expanded(
+      child: filteredAsyncValue.when(
+        loading: () =>
+            Center(child: CircularProgressIndicator(color: theme.primaryColor)),
+        error: (error, stackTrace) =>
+            _buildCenteredText('Помилка завантаження даних', theme),
+        data: (filteredList) {
+          if (filteredList.isEmpty) {
+            return _buildCenteredText('Змагань не знайдено', theme);
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            itemCount: filteredList.length,
+            itemBuilder: (context, index) {
+              final competition = filteredList[index];
+              return CompetitionCard(
+                competition: competition,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CompetitionDetailsScreen(
+                        competitionId: competition.id,
+                        initialCompetition: competition,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCenteredText(String text, ThemeData theme) {
+    return Center(
+      child: Text(
+        text,
+        style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+      ),
     );
   }
 }
