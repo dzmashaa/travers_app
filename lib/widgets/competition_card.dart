@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/models/competition.dart';
+import 'package:travers_app/utils/date_formatters.dart';
+import 'package:travers_app/widgets/comp_status.dart';
 
 class CompetitionCard extends StatelessWidget {
   final CompetitionModel competition;
@@ -9,56 +11,6 @@ class CompetitionCard extends StatelessWidget {
     required this.competition,
     required this.onTap,
   });
-  Color _getBadgeColor() {
-    switch (competition.status) {
-      case CompetitionStatus.active:
-        return const Color(0xFFC8F0D6);
-      case CompetitionStatus.upcoming:
-        return const Color(0xFFD6E4FF);
-      case CompetitionStatus.completed:
-        return Colors.grey.shade200;
-    }
-  }
-
-  Color _getBadgeTextColor() {
-    switch (competition.status) {
-      case CompetitionStatus.active:
-        return const Color(0xFF1B5E20);
-      case CompetitionStatus.upcoming:
-        return const Color(0xFF1565C0);
-      case CompetitionStatus.completed:
-        return Colors.black54;
-    }
-  }
-
-  String _getBadgeText() {
-    switch (competition.status) {
-      case CompetitionStatus.active:
-        return 'Триває';
-      case CompetitionStatus.upcoming:
-        return 'Майбутнє';
-      case CompetitionStatus.completed:
-        return 'Завершено';
-    }
-  }
-
-  String _formatDateRange(DateTime start, DateTime end) {
-    final sDay = start.day.toString().padLeft(2, '0');
-    final sMonth = start.month.toString().padLeft(2, '0');
-    final eDay = end.day.toString().padLeft(2, '0');
-    final eMonth = end.month.toString().padLeft(2, '0');
-    final year = start.year;
-
-    if (start.day == end.day &&
-        start.month == end.month &&
-        start.year == end.year) {
-      return '$sDay.$sMonth.$year';
-    }
-    if (start.month == end.month && start.year == end.year) {
-      return '$sDay-$eDay.$sMonth.$year';
-    }
-    return '$sDay.$sMonth - $eDay.$eMonth.$year';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +21,7 @@ class CompetitionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -100,24 +52,7 @@ class CompetitionCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getBadgeColor(),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _getBadgeText(),
-                        style: TextStyle(
-                          color: _getBadgeTextColor(),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    CompStatusBadge(status: competition.status),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -148,7 +83,7 @@ class CompetitionCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _formatDateRange(
+                      formatDateRange(
                         competition.startDate,
                         competition.endDate,
                       ),
