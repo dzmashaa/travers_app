@@ -8,6 +8,8 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  User? get currentUser => _firebaseAuth.currentUser;
+
   Future<void> signUp(String email, String password, String name) async {
     try {
       UserCredential userCredentials = await _firebaseAuth
@@ -98,7 +100,7 @@ class AuthService {
     }
   }
 
-  Future<void> updateUserRole(UserRole role) async {
+  Future<void> updateUserRole(UserRole role, {String? fallbackName}) async {
     final user = _firebaseAuth.currentUser;
     if (user == null) throw 'Користувач не авторизований';
 
@@ -106,7 +108,7 @@ class AuthService {
       await _firestore.collection('users').doc(user.uid).set({
         'role': role.name,
         'email': user.email,
-        'name': user.displayName,
+        'name': user.displayName ?? fallbackName ?? 'Користувач',
       }, SetOptions(merge: true));
     } catch (e) {
       throw 'Помилка оновлення ролі: $e';

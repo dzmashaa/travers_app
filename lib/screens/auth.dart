@@ -57,7 +57,7 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
       }
 
       if (!mounted) return;
-      await _handlePostAuthRouting();
+      await _handleRoleAndNavigation();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -71,8 +71,7 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
 
     try {
       await authService.signInWithGoogle();
-      if (!mounted) return;
-      await _handlePostAuthRouting();
+      await _handleRoleAndNavigation();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -80,47 +79,54 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  Future<void> _handlePostAuthRouting() async {
+  Future<void> _handleRoleAndNavigation() async {
     final authService = ref.read(authServiceProvider);
-    final existingRole = await authService.getUserRole();
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    if (_isLogin) {
-      if (existingRole == UserRole.headJudge) {
-        _navigateToCompetitions(UserRole.headJudge);
-      } else if (existingRole == UserRole.judge && widget.wantsHeadJudgeRole) {
-        await _askForHeadJudgeCode();
-      } else {
-        _navigateToCompetitions(UserRole.judge);
+    UserRole existingRole = UserRole.judge;
+    try {
+      final fetchedRole = await authService.getUserRole();
+      if (fetchedRole != null) {
+        existingRole = fetchedRole;
       }
-    } else {
-      if (widget.wantsHeadJudgeRole) {
-        await _askForHeadJudgeCode();
+    } catch (e) {
+      debugPrint('Помилка отримання ролі: $e');
+    }
+
+    UserRole finalRole = existingRole;
+    bool askForCode = false;
+    if (widget.wantsHeadJudgeRole) {
+      if (existingRole == UserRole.headJudge) {
+        askForCode = false;
       } else {
-        await authService.updateUserRole(UserRole.judge);
-        _navigateToCompetitions(UserRole.judge);
+        askForCode = true;
       }
     }
-  }
+    if (askForCode && mounted) {
+      final isCodeValid = await DialogHelpers.showAccessCodeDialog(
+        context,
+        title: 'Код організатора',
+        message:
+            'Введіть спеціальний код для доступу до функцій Головного судді.',
+        correctCode: AppConstants.headJudgeAccessCode,
+      );
 
-  Future<void> _askForHeadJudgeCode() async {
-    final isSuccess = await DialogHelpers.showCodeEntryDialog(
-      context,
-      title: 'Код організатора',
-      description:
-          'Введіть спеціальний код для доступу до функцій Головного судді.',
-      cancelText: 'Продовжити як Суддя',
-      confirmText: 'Підтвердити',
-      onValidate: (code) async {
-        await Future.delayed(const Duration(milliseconds: 300));
-        return code == AppConstants.headJudgeCode;
-      },
-    );
-    final finalRole = isSuccess ? UserRole.headJudge : UserRole.judge;
-
-    await ref.read(authServiceProvider).updateUserRole(finalRole);
+      if (isCodeValid) {
+        finalRole = UserRole.headJudge;
+      } else {
+        finalRole = UserRole.judge;
+      }
+    }
+    try {
+      await authService.updateUserRole(
+        finalRole,
+        fallbackName: _nameController.text.trim(),
+      );
+    } catch (e) {
+      if (mounted) SnackbarUtils.show(context, e.toString(), isError: true);
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isLoading = false);
     _navigateToCompetitions(finalRole);
   }
 

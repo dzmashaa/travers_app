@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:travers_app/utils/snackbar_utils.dart';
 import '../widgets/confirm_action_dialog.dart';
 
 class DialogHelpers {
@@ -20,129 +21,70 @@ class DialogHelpers {
     return result ?? false;
   }
 
-  static Future<bool> showCodeEntryDialog(
+  static Future<bool> showAccessCodeDialog(
     BuildContext context, {
     required String title,
-    required String description,
-    required String cancelText,
-    required String confirmText,
-    required Future<bool> Function(String code) onValidate,
-    String hintText = 'Введіть код...',
-    String defaultErrorMessage = 'Невірний код! Спробуйте ще раз.',
+    required String message,
+    required String correctCode,
   }) async {
-    final codeController = TextEditingController();
-    bool isCodeValid = false;
-    bool isLoading = false;
-    String? errorText;
+    final controller = TextEditingController();
 
-    await showDialog(
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (stContext, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.displayMedium?.copyWith(fontSize: 20),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Введіть код...',
+                border: OutlineInputBorder(),
               ),
-              title: Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.displayMedium?.copyWith(fontSize: 20),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: codeController,
-                    enabled: !isLoading,
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      errorText: errorText,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () {
-                          Navigator.of(ctx).pop();
-                        },
-                  child: Text(
-                    cancelText,
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          final code = codeController.text.trim();
-                          if (code.isEmpty) {
-                            setState(
-                              () => errorText = 'Код не може бути порожнім',
-                            );
-                            return;
-                          }
-
-                          setState(() {
-                            isLoading = true;
-                            errorText = null;
-                          });
-
-                          final isValid = await onValidate(code);
-
-                          if (isValid) {
-                            isCodeValid = true;
-                            if (ctx.mounted) Navigator.of(ctx).pop();
-                          } else {
-                            setState(() {
-                              isLoading = false;
-                              errorText = defaultErrorMessage;
-                            });
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          confirmText,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Продовжити як Суддя',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: Colors.black54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim() == correctCode) {
+                Navigator.pop(ctx, true);
+              } else {
+                SnackbarUtils.show(
+                  ctx,
+                  'Невірний код! Спробуйте ще раз.',
+                  isError: true,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Підтвердити'),
+          ),
+        ],
+      ),
     );
 
-    codeController.dispose();
-    return isCodeValid;
+    return result ?? false;
   }
 }
