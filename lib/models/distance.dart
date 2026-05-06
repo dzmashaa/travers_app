@@ -47,6 +47,24 @@ class Distance {
     required this.stageBlocks,
   });
 
+  Distance copyWith({
+    String? id,
+    DistanceType? type,
+    DistanceView? view,
+    int? classLevel,
+    String? description,
+    List<StageBlock>? blocks,
+  }) {
+    return Distance(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      view: view ?? this.view,
+      classLevel: classLevel ?? this.classLevel,
+      description: description ?? this.description,
+      stageBlocks: blocks ?? this.stageBlocks,
+    );
+  }
+
   factory Distance.fromMap(Map<String, dynamic> map) {
     return Distance(
       id: map['id'] ?? '',

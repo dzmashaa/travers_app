@@ -12,6 +12,19 @@ class StageBlock {
     required this.stages,
     this.judgeIds = const [],
   });
+  StageBlock copyWith({
+    String? id,
+    List<Stage>? stages,
+    String? blockName,
+    List<String>? judgeIds,
+  }) {
+    return StageBlock(
+      id: id ?? this.id,
+      blockName: blockName ?? this.blockName,
+      stages: stages ?? this.stages,
+      judgeIds: judgeIds ?? this.judgeIds,
+    );
+  }
 
   factory StageBlock.fromMap(Map<String, dynamic> map) {
     return StageBlock(
