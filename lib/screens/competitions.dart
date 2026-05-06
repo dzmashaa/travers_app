@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/auth_provider.dart';
 import 'package:travers_app/providers/comp_filter_provider.dart';
 import 'package:travers_app/providers/role_provider.dart';
 import 'package:travers_app/screens/add_competition.dart';
 import 'package:travers_app/screens/competition_details.dart';
+import 'package:travers_app/screens/home.dart';
+import 'package:travers_app/utils/dialog_helpers.dart';
+import 'package:travers_app/utils/snackbar_utils.dart';
 import 'package:travers_app/widgets/competition_card.dart';
 
 class CompetitionsScreen extends ConsumerStatefulWidget {
@@ -27,6 +31,44 @@ class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
           style: Theme.of(context).textTheme.displayMedium,
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        actions: [
+          if (role == UserRole.participant)
+            IconButton(
+              icon: Icon(
+                Icons.logout,
+                color: theme.textTheme.displayMedium?.color,
+              ),
+              onPressed: () async {
+                final shouldLogout = await DialogHelpers.showConfirmDialog(
+                  context,
+                  title: 'Вихід з акаунта',
+                  content: 'Ви впевнені, що хочете вийти?',
+                  confirmText: 'Вийти',
+                );
+
+                if (shouldLogout == true) {
+                  try {
+                    await ref.read(roleProvider.notifier).clearRole();
+                    await ref.read(authServiceProvider).signOut();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HomeScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      SnackbarUtils.show(context, e.toString(), isError: true);
+                    }
+                  }
+                }
+              },
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: Column(
