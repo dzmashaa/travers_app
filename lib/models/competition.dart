@@ -25,6 +25,8 @@ class CompetitionModel {
   final String inviteCode;
   final String headJudgeId;
   final List<Distance> distances;
+  final List<String> judgeIds;
+  final List<String> participantIds;
 
   CompetitionModel({
     required this.id,
@@ -35,6 +37,8 @@ class CompetitionModel {
     required this.inviteCode,
     required this.headJudgeId,
     required this.distances,
+    this.judgeIds = const [],
+    this.participantIds = const [],
   });
 
   CompetitionStatus get status {
@@ -66,6 +70,8 @@ class CompetitionModel {
               .map((e) => Distance.fromMap(e))
               .toList() ??
           [],
+      judgeIds: List<String>.from(map['judgeIds'] ?? []),
+      participantIds: List<String>.from(map['participantIds'] ?? []),
     );
   }
 
@@ -78,6 +84,8 @@ class CompetitionModel {
       'inviteCode': inviteCode,
       'headJudgeId': headJudgeId,
       'distances': distances.map((d) => d.toMap()).toList(),
+      'judgeIds': judgeIds,
+      'participantIds': participantIds,
     };
   }
 }

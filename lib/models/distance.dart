@@ -31,6 +31,7 @@ extension DistanceViewExtension on DistanceView {
 }
 
 class Distance {
+  final String id;
   final String? description;
   final DistanceType type;
   final int classLevel;
@@ -38,6 +39,7 @@ class Distance {
   final List<StageBlock> stageBlocks;
 
   Distance({
+    required this.id,
     this.description,
     required this.type,
     required this.classLevel,
@@ -47,6 +49,7 @@ class Distance {
 
   factory Distance.fromMap(Map<String, dynamic> map) {
     return Distance(
+      id: map['id'] ?? '',
       description: map['name'] ?? '',
       type: DistanceType.values.firstWhere(
         (e) => e.toString().split('.').last == map['type'],
@@ -67,6 +70,7 @@ class Distance {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'description': description,
       'type': type.toString().split('.').last,
       'classLevel': classLevel,
