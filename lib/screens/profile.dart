@@ -2,8 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/auth_provider.dart';
 import 'package:travers_app/providers/role_provider.dart';
 import 'package:travers_app/screens/home.dart';
+import 'package:travers_app/utils/dialog_helpers.dart';
+import 'package:travers_app/utils/snackbar_utils.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -78,7 +81,7 @@ class ProfileScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -86,14 +89,36 @@ class ProfileScreen extends ConsumerWidget {
               ),
               child: ListTile(
                 onTap: () async {
-                  await ref.read(roleProvider.notifier).clearRole();
-                  await FirebaseAuth.instance.signOut();
-
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                    (route) => false,
+                  final shouldLogout = await DialogHelpers.showConfirmDialog(
+                    context,
+                    title: 'Вихід з акаунта',
+                    content: 'Ви впевнені, що хочете вийти?',
+                    confirmText: 'Вийти',
                   );
+
+                  if (shouldLogout == true) {
+                    try {
+                      await ref.read(roleProvider.notifier).clearRole();
+                      await ref.read(authServiceProvider).signOut();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        SnackbarUtils.show(
+                          context,
+                          e.toString(),
+                          isError: true,
+                        );
+                      }
+                    }
+                  }
                 },
                 leading: const Icon(Icons.logout, color: Colors.redAccent),
                 title: const Text(

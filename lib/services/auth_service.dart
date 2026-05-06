@@ -68,6 +68,16 @@ class AuthService {
     }
   }
 
+  Future<void> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+
+      await _googleSignIn.signOut();
+    } catch (e) {
+      throw 'Помилка при виході з акаунту: $e';
+    }
+  }
+
   String _translateAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-credential':
