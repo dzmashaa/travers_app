@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/auth_provider.dart';
 import 'package:travers_app/providers/role_provider.dart';
 import 'package:travers_app/screens/main_shell.dart';
-import 'package:travers_app/services/auth_service.dart';
+import 'package:travers_app/utils/app_constants.dart';
+import 'package:travers_app/utils/dialog_helpers.dart';
 import 'package:travers_app/utils/snackbar_utils.dart';
 import 'package:travers_app/widgets/custom_text_field.dart';
 
@@ -21,7 +23,6 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   var _isLogin = true;
   var _isLoading = false;
-  final AuthService _authService = AuthService();
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,32 +40,24 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     super.dispose();
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
 
-    setState(() {
-      _isLoading = true;
-    });
+    final authService = ref.read(authServiceProvider);
 
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
+
       if (_isLogin) {
-        await _authService.signIn(email, password);
+        await authService.signIn(email, password);
       } else {
-        await _authService.signUp(email, password, _nameController.text.trim());
+        await authService.signUp(email, password, _nameController.text.trim());
       }
 
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (widget.wantsHeadJudgeRole) {
-        _showCodeDialog();
-      } else {
-        _navigateToCompetitions(UserRole.judge);
-      }
+      await _handlePostAuthRouting();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -72,61 +65,63 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  void _showCodeDialog() {
-    _codeController.clear();
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          title: const Text('Код організатора'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Введіть спеціальний код для доступу до функцій Головного судді.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                  hintText: 'Введіть код...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _navigateToCompetitions(UserRole.judge);
-              },
-              child: const Text('Продовжити як Суддя'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_codeController.text.trim() == '1234') {
-                  Navigator.of(context).pop();
-                  _navigateToCompetitions(UserRole.headJudge);
-                } else {
-                  SnackbarUtils.show(
-                    context,
-                    'Невірний код! Спробуйте ще раз.',
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Підтвердити'),
-            ),
-          ],
-        );
+  Future<void> _googleAuth() async {
+    setState(() => _isLoading = true);
+    final authService = ref.read(authServiceProvider);
+
+    try {
+      await authService.signInWithGoogle();
+      if (!mounted) return;
+      await _handlePostAuthRouting();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      SnackbarUtils.show(context, e.toString());
+    }
+  }
+
+  Future<void> _handlePostAuthRouting() async {
+    final authService = ref.read(authServiceProvider);
+    final existingRole = await authService.getUserRole();
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (_isLogin) {
+      if (existingRole == UserRole.headJudge) {
+        _navigateToCompetitions(UserRole.headJudge);
+      } else if (existingRole == UserRole.judge && widget.wantsHeadJudgeRole) {
+        await _askForHeadJudgeCode();
+      } else {
+        _navigateToCompetitions(UserRole.judge);
+      }
+    } else {
+      if (widget.wantsHeadJudgeRole) {
+        await _askForHeadJudgeCode();
+      } else {
+        await authService.updateUserRole(UserRole.judge);
+        _navigateToCompetitions(UserRole.judge);
+      }
+    }
+  }
+
+  Future<void> _askForHeadJudgeCode() async {
+    final isSuccess = await DialogHelpers.showCodeEntryDialog(
+      context,
+      title: 'Код організатора',
+      description:
+          'Введіть спеціальний код для доступу до функцій Головного судді.',
+      cancelText: 'Продовжити як Суддя',
+      confirmText: 'Підтвердити',
+      onValidate: (code) async {
+        await Future.delayed(const Duration(milliseconds: 300));
+        return code == AppConstants.headJudgeCode;
       },
     );
+    final finalRole = isSuccess ? UserRole.headJudge : UserRole.judge;
+
+    await ref.read(authServiceProvider).updateUserRole(finalRole);
+    _navigateToCompetitions(finalRole);
   }
 
   void _navigateToCompetitions(UserRole role) async {
@@ -156,39 +151,26 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
               const SizedBox(height: 16),
               CustomTextField(
                 controller: resetEmailController,
-                label: '',
-                keyboardType: TextInputType.emailAddress,
+                label: 'Електронна пошта',
                 icon: Icons.mail_outline,
               ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-              },
-              child: Text(
-                'Скасувати',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Скасувати'),
             ),
             ElevatedButton(
               onPressed: () async {
                 final email = resetEmailController.text.trim();
                 if (email.isEmpty || !email.contains('@')) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Будь ласка, введіть коректний email'),
-                    ),
-                  );
+                  SnackbarUtils.show(context, 'Введіть коректний email');
                   return;
                 }
-
                 try {
                   Navigator.of(ctx).pop();
-
-                  await _authService.resetPassword(email);
-
+                  await ref.read(authServiceProvider).resetPassword(email);
                   if (!mounted) return;
                   SnackbarUtils.show(
                     context,
@@ -200,36 +182,12 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
                   SnackbarUtils.show(context, e.toString());
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondary,
-                foregroundColor: Colors.white,
-              ),
               child: const Text('Надіслати'),
             ),
           ],
         );
       },
     );
-  }
-
-  void _googleAuth() async {
-    setState(() => _isLoading = true);
-    try {
-      await _authService.signInWithGoogle();
-
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      if (widget.wantsHeadJudgeRole) {
-        _showCodeDialog();
-      } else {
-        _navigateToCompetitions(UserRole.judge);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      SnackbarUtils.show(context, e.toString());
-    }
   }
 
   Widget _buildHeader(ThemeData theme) {
