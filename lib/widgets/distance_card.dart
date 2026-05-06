@@ -3,12 +3,14 @@ import 'package:travers_app/models/distance.dart';
 
 class DistanceCard extends StatelessWidget {
   final Distance distance;
+  final bool canEdit;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   const DistanceCard({
     super.key,
     required this.distance,
+    required this.canEdit,
     required this.onTap,
     required this.onDelete,
   });
@@ -90,17 +92,19 @@ class DistanceCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                if (canEdit) ...[
+                  const SizedBox(width: 8),
 
-                IconButton(
-                  onPressed: onDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    color: theme.colorScheme.error.withValues(alpha: 0.8),
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: theme.colorScheme.error.withValues(alpha: 0.8),
+                    ),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
                   ),
-                  constraints: const BoxConstraints(),
-                  padding: EdgeInsets.zero,
-                ),
+                ],
               ],
             ),
           ),

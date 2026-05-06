@@ -91,6 +91,13 @@ class CompetitionRepository {
     return Iterable.generate(6, (_) => chars[rnd.nextInt(chars.length)]).join();
   }
 
+  Future<void> deleteCompetition(String competitionId) async {
+    await _db
+        .collection(AppConstants.competitionsCollection)
+        .doc(competitionId)
+        .delete();
+  }
+
   Future<void> addDistance({
     required String competitionId,
     required String description,

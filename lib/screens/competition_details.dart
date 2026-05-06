@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/models/competition.dart';
 import 'package:travers_app/models/distance.dart';
+import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/providers/auth_provider.dart';
 import 'package:travers_app/providers/competition_provider.dart';
+import 'package:travers_app/providers/role_provider.dart';
 import 'package:travers_app/screens/add_competition.dart';
 import 'package:travers_app/screens/add_distance_bottom_sheet.dart';
 import 'package:travers_app/utils/date_formatters.dart';
@@ -72,12 +75,59 @@ class CompetitionDetailsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _handleDeleteCompetition(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final shouldDelete = await DialogHelpers.showConfirmDialog(
+      context,
+      title: 'Видалення змагання',
+      content:
+          'Ви впевнені, що хочете видалити це змагання назавжди? Усі пов\'язані дані будуть втрачені.',
+    );
+
+    if (!shouldDelete || !context.mounted) return;
+
+    try {
+      await ref
+          .read(competitionRepositoryProvider)
+          .deleteCompetition(competitionId);
+
+      if (context.mounted) {
+        SnackbarUtils.show(
+          context,
+          'Змагання успішно видалено',
+          isError: false,
+        );
+
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackbarUtils.show(
+          context,
+          ErrorMapper.getHumanReadableMessage(e),
+          isError: true,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final competitionAsyncValue = ref.watch(
       competitionStreamProvider(competitionId),
     );
+    final currentCompetition =
+        competitionAsyncValue.asData?.value ?? initialCompetition;
+    final role = ref.watch(roleProvider).value;
+    final currentUserUid = ref.watch(currentUserUidProvider);
+    final isCreator =
+        currentUserUid != null &&
+        currentUserUid == currentCompetition.headJudgeId;
+    final isHeadJudge = role == UserRole.headJudge;
+    final canEdit = isHeadJudge && isCreator;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -96,21 +146,22 @@ class CompetitionDetailsScreen extends ConsumerWidget {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Colors.black87),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddCompetitionScreen(
-                    competition:
-                        competitionAsyncValue.asData?.value ??
-                        initialCompetition,
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddCompetitionScreen(
+                      competition:
+                          competitionAsyncValue.asData?.value ??
+                          initialCompetition,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -132,7 +183,11 @@ class CompetitionDetailsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _MainInfoCard(competition: competition),
+                      _MainInfoCard(
+                        competition: competition,
+                        canEdit: canEdit,
+                        onDelete: () => _handleDeleteCompetition(context, ref),
+                      ),
                       const SizedBox(height: 16),
                       _StatsRow(competition: competition),
                       const SizedBox(height: 32),
@@ -145,30 +200,31 @@ class CompetitionDetailsScreen extends ConsumerWidget {
                               fontSize: 22,
                             ),
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                _showAddDistanceBottomSheet(context),
-                            icon: const Icon(
-                              Icons.add,
-                              size: 18,
-                              color: Colors.black87,
-                            ),
-                            label: const Text(
-                              'Додати',
-                              style: TextStyle(
+                          if (canEdit)
+                            ElevatedButton.icon(
+                              onPressed: () =>
+                                  _showAddDistanceBottomSheet(context),
+                              icon: const Icon(
+                                Icons.add,
+                                size: 18,
                                 color: Colors.black87,
-                                fontWeight: FontWeight.bold,
+                              ),
+                              label: const Text(
+                                'Додати',
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                elevation: 0,
+                                side: BorderSide(color: Colors.grey.shade300),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                               ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              elevation: 0,
-                              side: BorderSide(color: Colors.grey.shade300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ],
@@ -191,6 +247,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: DistanceCard(
                           distance: distance,
+                          canEdit: canEdit,
                           onTap: () {
                             // TODO: Перехід на екрапн етапів
                           },
@@ -213,8 +270,14 @@ class CompetitionDetailsScreen extends ConsumerWidget {
 
 class _MainInfoCard extends StatelessWidget {
   final CompetitionModel competition;
+  final bool canEdit;
+  final VoidCallback onDelete;
 
-  const _MainInfoCard({required this.competition});
+  const _MainInfoCard({
+    required this.competition,
+    required this.canEdit,
+    required this.onDelete,
+  });
 
   void _copyCode(BuildContext context) {
     Clipboard.setData(ClipboardData(text: competition.inviteCode));
@@ -238,71 +301,89 @@ class _MainInfoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CompStatusBadge(status: competition.status, fontSize: 14.0),
-              GestureDetector(
-                onTap: () => _copyCode(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.copy, size: 14, color: theme.primaryColor),
-                      const SizedBox(width: 6),
-                      Text(
-                        competition.inviteCode,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.primaryColor,
-                          fontSize: 14,
-                        ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CompStatusBadge(status: competition.status, fontSize: 14.0),
+                  GestureDetector(
+                    onTap: () => _copyCode(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                    ],
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.copy, size: 14, color: theme.primaryColor),
+                          const SizedBox(width: 6),
+                          Text(
+                            competition.inviteCode,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.primaryColor,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    size: 20,
+                    color: theme.textTheme.bodyMedium?.color,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    competition.location,
+                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_month,
+                    size: 20,
+                    color: theme.textTheme.bodyMedium?.color,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    formatDateRange(competition.startDate, competition.endDate),
+                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          if (canEdit)
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: IconButton(
+                onPressed: onDelete,
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error.withValues(alpha: 0.8),
                 ),
+                tooltip: 'Видалити змагання',
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Icon(
-                Icons.location_on,
-                size: 20,
-                color: theme.textTheme.bodyMedium?.color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                competition.location,
-                style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_month,
-                size: 20,
-                color: theme.textTheme.bodyMedium?.color,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                formatDateRange(competition.startDate, competition.endDate),
-                style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
