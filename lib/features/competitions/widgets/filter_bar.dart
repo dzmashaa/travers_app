@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travers_app/core/utils/comp_filters.dart';
 import 'package:travers_app/features/competitions/providers/comp_filter_provider.dart';
 
 class FilterBar extends ConsumerWidget {

@@ -102,17 +102,25 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
       }
     }
     if (askForCode && mounted) {
-      final isCodeValid = await DialogHelpers.showAccessCodeDialog(
+      final enteredCode = await DialogHelpers.showAccessCodeDialog(
         context,
         title: 'Код організатора',
         message:
             'Введіть спеціальний код для доступу до функцій Головного судді.',
-        correctCode: AppConstants.headJudgeAccessCode,
+        cancelText: 'Продовжити як Суддя',
+        barrierDismissible: false,
       );
 
-      if (isCodeValid) {
+      if (enteredCode == AppConstants.headJudgeAccessCode) {
         finalRole = UserRole.headJudge;
       } else {
+        if (enteredCode != null) {
+          SnackbarUtils.show(
+            context,
+            'Невірний код організатора!',
+            isError: true,
+          );
+        }
         finalRole = UserRole.judge;
       }
     }

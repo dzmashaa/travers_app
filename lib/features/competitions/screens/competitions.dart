@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/competitions/providers/comp_filter_provider.dart';
 import 'package:travers_app/features/competitions/widgets/add_competition.dart';
 import 'package:travers_app/features/auth/screens/home.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
-import 'package:travers_app/features/competitions/widgets/comp_list.dart';
+import 'package:travers_app/core/widgets/comp_list.dart';
 import 'package:travers_app/features/competitions/widgets/filter_bar.dart';
 
 class CompetitionsScreen extends ConsumerStatefulWidget {
@@ -84,7 +85,10 @@ class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
           children: [
             FilterBar(),
             const SizedBox(height: 12),
-            CompetitionsList(),
+            CompetitionsList(
+              competitionsAsync: ref.watch(filteredCompetitionsProvider),
+              emptyMessage: "Змаганнь не знайдено",
+            ),
           ],
         ),
       ),

@@ -22,17 +22,19 @@ class DialogHelpers {
     return result ?? false;
   }
 
-  static Future<bool> showAccessCodeDialog(
+  static Future<String?> showAccessCodeDialog(
     BuildContext context, {
     required String title,
     required String message,
-    required String correctCode,
+    String cancelText = 'Скасувати',
+    String confirmText = 'Підтвердити',
+    bool barrierDismissible = true,
   }) async {
     final controller = TextEditingController();
 
-    final result = await showDialog<bool>(
+    final result = await showDialog<String>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: barrierDismissible,
       builder: (ctx) => AlertDialog(
         title: Text(
           title,
@@ -47,6 +49,8 @@ class DialogHelpers {
             const SizedBox(height: 16),
             TextField(
               controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
               decoration: const InputDecoration(
                 hintText: 'Введіть код...',
                 border: OutlineInputBorder(),
@@ -56,9 +60,9 @@ class DialogHelpers {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
+            onPressed: () => Navigator.pop(ctx, null),
             child: Text(
-              'Продовжити як Суддя',
+              cancelText,
               style: Theme.of(
                 context,
               ).textTheme.labelLarge?.copyWith(color: Colors.black54),
@@ -66,12 +70,13 @@ class DialogHelpers {
           ),
           ElevatedButton(
             onPressed: () {
-              if (controller.text.trim() == correctCode) {
-                Navigator.pop(ctx, true);
+              final code = controller.text.trim();
+              if (code.isNotEmpty) {
+                Navigator.pop(ctx, code);
               } else {
                 SnackbarUtils.show(
                   ctx,
-                  'Невірний код! Спробуйте ще раз.',
+                  'Код не може бути порожнім',
                   isError: true,
                 );
               }
@@ -80,13 +85,13 @@ class DialogHelpers {
               backgroundColor: Theme.of(context).colorScheme.secondary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Підтвердити'),
+            child: Text(confirmText),
           ),
         ],
       ),
     );
 
-    return result ?? false;
+    return result;
   }
 
   static Future<String?> showTextInputDialog(
