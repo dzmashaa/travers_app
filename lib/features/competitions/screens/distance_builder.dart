@@ -5,7 +5,7 @@ import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/stage_block.dart';
 import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
-import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/features/competitions/controllers/distance_builder_controller.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';

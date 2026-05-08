@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/repositories/competition_repository.dart';
 
 final distanceBuilderControllerProvider =
     AsyncNotifierProvider<DistanceBuilderController, void>(() {

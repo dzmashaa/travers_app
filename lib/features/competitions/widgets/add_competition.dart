@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:travers_app/core/models/competition.dart';
-import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/features/competitions/screens/competition_details.dart';
 import 'package:travers_app/core/utils/error_mapper.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';

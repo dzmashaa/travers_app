@@ -5,8 +5,8 @@ import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/models/stage_block.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/models/distance.dart';
-import '../../../core/utils/app_constants.dart';
+import '../models/distance.dart';
+import '../utils/app_constants.dart';
 import 'dart:math' as math;
 
 final competitionRepositoryProvider = Provider(
@@ -93,6 +93,21 @@ class CompetitionRepository {
         'ABCDEFGHIJKLMNOPQRSTUVWXYZqwertyuiopasdfghjklzxcvbnm0123456789';
     final rnd = math.Random.secure();
     return Iterable.generate(6, (_) => chars[rnd.nextInt(chars.length)]).join();
+  }
+
+  Future<CompetitionModel?> getCompetitionByInviteCode(String code) async {
+    final snapshot = await _db
+        .collection(AppConstants.competitionsCollection)
+        .where('inviteCode', isEqualTo: code)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    return CompetitionModel.fromMap(
+      snapshot.docs.first.data(),
+      snapshot.docs.first.id,
+    );
   }
 
   Future<void> deleteCompetition(String competitionId) async {

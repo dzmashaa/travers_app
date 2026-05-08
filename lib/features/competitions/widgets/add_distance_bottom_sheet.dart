@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/distance.dart';
-import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/core/utils/app_decorations.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
 import '../../../core/utils/error_mapper.dart';
