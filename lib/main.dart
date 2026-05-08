@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/screens/competitions.dart';
-import 'package:travers_app/screens/home.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/features/competitions/screens/competitions.dart';
+import 'package:travers_app/features/auth/screens/home.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:travers_app/screens/main_shell.dart';
-import 'package:travers_app/services/storage_service.dart';
+import 'package:travers_app/features/navigation/main_shell.dart';
+import 'package:travers_app/core/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
