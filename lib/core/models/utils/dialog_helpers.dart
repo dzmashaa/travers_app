@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
-import '../widgets/confirm_action_dialog.dart';
+import '../../widgets/confirm_action_dialog.dart';
 
 class DialogHelpers {
   static Future<bool> showConfirmDialog(
