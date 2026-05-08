@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/providers/role_provider.dart';
-import 'package:travers_app/screens/auth.dart';
-import 'package:travers_app/screens/competitions.dart';
-import 'package:travers_app/services/auth_service.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
-import 'package:travers_app/widgets/role_card.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/auth/screens/auth.dart';
+import 'package:travers_app/features/competitions/screens/competitions.dart';
+import 'package:travers_app/features/auth/auth_service.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/features/auth/widgets/role_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

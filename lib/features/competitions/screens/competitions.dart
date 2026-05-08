@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/providers/auth_provider.dart';
-import 'package:travers_app/providers/comp_filter_provider.dart';
-import 'package:travers_app/providers/role_provider.dart';
-import 'package:travers_app/screens/add_competition.dart';
-import 'package:travers_app/screens/competition_details.dart';
-import 'package:travers_app/screens/home.dart';
-import 'package:travers_app/utils/dialog_helpers.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
-import 'package:travers_app/widgets/competition_card.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/features/auth/auth_provider.dart';
+import 'package:travers_app/features/competitions/providers/comp_filter_provider.dart';
+import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/competitions/screens/add_competition.dart';
+import 'package:travers_app/features/competitions/screens/competition_details.dart';
+import 'package:travers_app/features/auth/screens/home.dart';
+import 'package:travers_app/core/utils/dialog_helpers.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/features/competitions/widgets/competition_card.dart';
 
 class CompetitionsScreen extends ConsumerStatefulWidget {
   const CompetitionsScreen({super.key});

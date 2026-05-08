@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/services/storage_service.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/services/storage_service.dart';
 
 final roleProvider = AsyncNotifierProvider<RoleNotifier, UserRole?>(() {
   return RoleNotifier();

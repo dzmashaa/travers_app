@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/distance.dart';
-import 'package:travers_app/providers/competition_provider.dart';
-import 'package:travers_app/utils/app_decorations.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
-import '../utils/error_mapper.dart';
+import 'package:travers_app/core/models/distance.dart';
+import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/utils/app_decorations.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
+import '../../../core/utils/error_mapper.dart';
 
 class AddDistanceBottomSheet extends ConsumerStatefulWidget {
   final String competitionId;
+  final Distance? initialDistance;
 
-  const AddDistanceBottomSheet({super.key, required this.competitionId});
+  const AddDistanceBottomSheet({
+    super.key,
+    required this.competitionId,
+    this.initialDistance,
+  });
 
   @override
   ConsumerState<AddDistanceBottomSheet> createState() =>
@@ -19,12 +24,22 @@ class AddDistanceBottomSheet extends ConsumerStatefulWidget {
 class _AddDistanceBottomSheetState
     extends ConsumerState<AddDistanceBottomSheet> {
   final _formKey = GlobalKey<FormState>();
-
   String _description = '';
   DistanceType _type = DistanceType.obstacleCourse;
   DistanceView _view = DistanceView.individual;
   int _classLevel = 1;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialDistance != null) {
+      _description = widget.initialDistance!.description ?? '';
+      _type = widget.initialDistance!.type;
+      _view = widget.initialDistance!.view;
+      _classLevel = widget.initialDistance!.classLevel;
+    }
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -33,15 +48,30 @@ class _AddDistanceBottomSheetState
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(competitionRepositoryProvider)
-          .addDistance(
-            competitionId: widget.competitionId,
-            description: _description,
-            type: _type,
-            view: _view,
-            classLevel: _classLevel,
-          );
+      final repository = ref.read(competitionRepositoryProvider);
+      if (widget.initialDistance != null) {
+        final updatedDistance = widget.initialDistance!.copyWith(
+          type: _type,
+          view: _view,
+          classLevel: _classLevel,
+          description: _description,
+        );
+
+        await repository.updateDistance(
+          competitionId: widget.competitionId,
+          updatedDistance: updatedDistance,
+        );
+      } else {
+        await ref
+            .read(competitionRepositoryProvider)
+            .addDistance(
+              competitionId: widget.competitionId,
+              description: _description,
+              type: _type,
+              view: _view,
+              classLevel: _classLevel,
+            );
+      }
 
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -58,6 +88,7 @@ class _AddDistanceBottomSheetState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final isEditing = widget.initialDistance != null;
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, 24, 20, bottomPadding + 24),
@@ -72,7 +103,7 @@ class _AddDistanceBottomSheetState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Нова дистанція',
+              isEditing ? 'Змінити дистанцію' : 'Додати дистанцію',
               style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
             ),
             const SizedBox(height: 24),
@@ -170,6 +201,7 @@ class _AddDistanceBottomSheetState
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
+              initialValue: widget.initialDistance?.description,
               decoration: AppDecorations.inputField(
                 theme: theme,
                 label: 'Додаткова інформація (опціонально)',
@@ -202,7 +234,7 @@ class _AddDistanceBottomSheetState
                         ),
                       )
                     : Text(
-                        'Додати',
+                        isEditing ? 'Зберегти' : 'Додати дистанцію',
                         style: theme.textTheme.labelLarge?.copyWith(
                           color: Colors.white,
                         ),

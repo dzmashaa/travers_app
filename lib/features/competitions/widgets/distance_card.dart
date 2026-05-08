@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travers_app/models/distance.dart';
+import 'package:travers_app/core/models/distance.dart';
 
 class DistanceCard extends StatelessWidget {
   final Distance distance;

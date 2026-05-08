@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travers_app/models/competition.dart';
+import 'package:travers_app/core/models/competition.dart';
 
 class CompStatusBadge extends StatelessWidget {
   final CompetitionStatus status;

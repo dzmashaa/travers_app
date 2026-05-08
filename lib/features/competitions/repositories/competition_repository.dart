@@ -5,8 +5,8 @@ import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/models/stage_block.dart';
 import 'package:uuid/uuid.dart';
-import '../core/models/distance.dart';
-import '../core/utils/app_constants.dart';
+import '../../../core/models/distance.dart';
+import '../../../core/utils/app_constants.dart';
 import 'dart:math' as math;
 
 final competitionRepositoryProvider = Provider(

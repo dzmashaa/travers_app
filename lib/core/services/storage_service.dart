@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/core/models/user_role.dart';
 
 class StorageService {
   static const String _roleKey = 'user_role';

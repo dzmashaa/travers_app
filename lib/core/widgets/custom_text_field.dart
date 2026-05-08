@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travers_app/utils/app_decorations.dart';
+import 'package:travers_app/core/utils/app_decorations.dart';
 
 class CustomTextField extends StatefulWidget {
   const CustomTextField({

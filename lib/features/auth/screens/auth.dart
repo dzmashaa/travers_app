@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/providers/auth_provider.dart';
-import 'package:travers_app/providers/role_provider.dart';
-import 'package:travers_app/screens/main_shell.dart';
-import 'package:travers_app/utils/app_constants.dart';
-import 'package:travers_app/utils/dialog_helpers.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
-import 'package:travers_app/widgets/custom_text_field.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/features/auth/auth_provider.dart';
+import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/navigation/main_shell.dart';
+import 'package:travers_app/core/utils/app_constants.dart';
+import 'package:travers_app/core/utils/dialog_helpers.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/core/widgets/custom_text_field.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key, required this.wantsHeadJudgeRole});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:travers_app/models/competition.dart';
-import 'package:travers_app/utils/date_formatters.dart';
-import 'package:travers_app/widgets/comp_status.dart';
+import 'package:travers_app/core/models/competition.dart';
+import 'package:travers_app/core/utils/date_formatters.dart';
+import 'package:travers_app/features/competitions/widgets/comp_status.dart';
 
 class CompetitionCard extends StatelessWidget {
   final CompetitionModel competition;

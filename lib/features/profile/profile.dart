@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:travers_app/models/user_role.dart';
-import 'package:travers_app/providers/auth_provider.dart';
-import 'package:travers_app/providers/role_provider.dart';
-import 'package:travers_app/screens/home.dart';
-import 'package:travers_app/utils/dialog_helpers.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
+import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/features/auth/auth_provider.dart';
+import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/auth/screens/home.dart';
+import 'package:travers_app/core/utils/dialog_helpers.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});

@@ -4,19 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/distance.dart';
 import 'package:travers_app/core/models/user_role.dart';
-import 'package:travers_app/providers/auth_provider.dart';
-import 'package:travers_app/providers/competition_repository.dart';
-import 'package:travers_app/providers/role_provider.dart';
-import 'package:travers_app/screens/add_competition.dart';
-import 'package:travers_app/screens/add_distance_bottom_sheet.dart';
-import 'package:travers_app/screens/distance_builder.dart';
+import 'package:travers_app/features/auth/auth_provider.dart';
+import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/competitions/screens/add_competition.dart';
+import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';
+import 'package:travers_app/features/competitions/screens/distance_builder.dart';
 import 'package:travers_app/core/utils/date_formatters.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
 import 'package:travers_app/core/utils/error_mapper.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
-import 'package:travers_app/widgets/comp_status.dart';
-import 'package:travers_app/widgets/distance_card.dart';
-import 'package:travers_app/widgets/stat_card.dart';
+import 'package:travers_app/features/competitions/widgets/comp_status.dart';
+import 'package:travers_app/features/competitions/widgets/distance_card.dart';
+import 'package:travers_app/core/widgets/stat_card.dart';
 
 class CompetitionDetailsScreen extends ConsumerWidget {
   final String competitionId;

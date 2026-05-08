@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:travers_app/models/competition.dart';
-import 'package:travers_app/providers/competition_provider.dart';
-import 'package:travers_app/screens/competition_details.dart';
-import 'package:travers_app/utils/error_mapper.dart';
-import 'package:travers_app/utils/snackbar_utils.dart';
-import 'package:travers_app/widgets/custom_date_field.dart';
-import 'package:travers_app/widgets/custom_text_field.dart';
+import 'package:travers_app/core/models/competition.dart';
+import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
+import 'package:travers_app/features/competitions/screens/competition_details.dart';
+import 'package:travers_app/core/utils/error_mapper.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/core/widgets/custom_date_field.dart';
+import 'package:travers_app/core/widgets/custom_text_field.dart';
 import 'package:flutter/services.dart';
 
 class AddCompetitionScreen extends ConsumerStatefulWidget {
