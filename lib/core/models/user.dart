@@ -1,4 +1,4 @@
-import 'package:travers_app/models/user_role.dart';
+import 'package:travers_app/core/models/user_role.dart';
 
 class UserModel {
   final String id;

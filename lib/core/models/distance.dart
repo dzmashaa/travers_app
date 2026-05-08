@@ -1,4 +1,4 @@
-import 'package:travers_app/models/stage_block.dart';
+import 'package:travers_app/core/models/stage_block.dart';
 
 enum DistanceType { obstacleCourse, crossHike, rescueWork }
 
@@ -68,7 +68,7 @@ class Distance {
   factory Distance.fromMap(Map<String, dynamic> map) {
     return Distance(
       id: map['id'] ?? '',
-      description: map['name'] ?? '',
+      description: map['description'] ?? '',
       type: DistanceType.values.firstWhere(
         (e) => e.toString().split('.').last == map['type'],
         orElse: () => DistanceType.obstacleCourse,

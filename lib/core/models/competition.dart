@@ -1,4 +1,4 @@
-import 'package:travers_app/models/distance.dart';
+import 'package:travers_app/core/models/distance.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CompetitionStatus { upcoming, active, completed }

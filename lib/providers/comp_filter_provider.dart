@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:travers_app/models/competition.dart';
-import 'package:travers_app/providers/competition_provider.dart';
+import 'package:travers_app/core/models/competition.dart';
+import 'package:travers_app/providers/competition_repository.dart';
 
 enum CompetitionFilter { all, active, upcoming, completed }
 
