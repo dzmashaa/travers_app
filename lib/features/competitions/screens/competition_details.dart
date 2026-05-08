@@ -7,14 +7,13 @@ import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/features/competitions/repositories/competition_repository.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
-import 'package:travers_app/features/competitions/screens/add_competition.dart';
+import 'package:travers_app/features/competitions/widgets/add_competition.dart';
 import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';
 import 'package:travers_app/features/competitions/screens/distance_builder.dart';
-import 'package:travers_app/core/utils/date_formatters.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
 import 'package:travers_app/core/utils/error_mapper.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
-import 'package:travers_app/features/competitions/widgets/comp_status.dart';
+import 'package:travers_app/features/competitions/widgets/comp_info_card.dart';
 import 'package:travers_app/features/competitions/widgets/distance_card.dart';
 import 'package:travers_app/core/widgets/stat_card.dart';
 
@@ -151,14 +150,14 @@ class CompetitionDetailsScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.black87),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddCompetitionScreen(
-                      competition:
-                          competitionAsyncValue.asData?.value ??
-                          initialCompetition,
-                    ),
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => AddCompetitionBottomSheet(
+                    competition:
+                        competitionAsyncValue.asData?.value ??
+                        initialCompetition,
                   ),
                 );
               },
@@ -184,7 +183,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _MainInfoCard(
+                      CompInfoCard(
                         competition: competition,
                         canEdit: canEdit,
                         onDelete: () => _handleDeleteCompetition(context, ref),
@@ -272,128 +271,6 @@ class CompetitionDetailsScreen extends ConsumerWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _MainInfoCard extends StatelessWidget {
-  final CompetitionModel competition;
-  final bool canEdit;
-  final VoidCallback onDelete;
-
-  const _MainInfoCard({
-    required this.competition,
-    required this.canEdit,
-    required this.onDelete,
-  });
-
-  void _copyCode(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: competition.inviteCode));
-    SnackbarUtils.show(context, 'Код скопійовано!', isError: false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CompStatusBadge(status: competition.status, fontSize: 14.0),
-                  GestureDetector(
-                    onTap: () => _copyCode(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy, size: 14, color: theme.primaryColor),
-                          const SizedBox(width: 6),
-                          Text(
-                            competition.inviteCode,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: theme.primaryColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 20,
-                    color: theme.textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    competition.location,
-                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_month,
-                    size: 20,
-                    color: theme.textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    formatDateRange(competition.startDate, competition.endDate),
-                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          if (canEdit)
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: IconButton(
-                onPressed: onDelete,
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: theme.colorScheme.error.withValues(alpha: 0.8),
-                ),
-                tooltip: 'Видалити змагання',
-              ),
-            ),
-        ],
       ),
     );
   }
