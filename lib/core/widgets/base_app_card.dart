@@ -4,11 +4,13 @@ class BaseAppCard extends StatelessWidget {
   final VoidCallback onTap;
   final Widget child;
   final EdgeInsetsGeometry? margin;
+  final BoxBorder? border;
   const BaseAppCard({
     super.key,
     required this.onTap,
     required this.child,
     this.margin,
+    this.border,
   });
 
   @override
@@ -18,6 +20,7 @@ class BaseAppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: border,
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).shadowColor.withValues(alpha: 0.04),

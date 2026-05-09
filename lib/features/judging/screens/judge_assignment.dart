@@ -4,6 +4,7 @@ import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/features/competitions/widgets/comp_status.dart';
 import 'package:travers_app/features/judging/providers/judge_provider.dart';
+import 'package:travers_app/features/judging/screens/participant_search.dart';
 import 'package:travers_app/features/judging/widgets/judge_assignment_card.dart';
 
 class JudgeAssignmentsScreen extends ConsumerWidget {
@@ -92,7 +93,15 @@ class JudgeAssignmentsScreen extends ConsumerWidget {
                       return JudgeAssignmentCard(
                         assignment: assignment,
                         onTap: () {
-                          // TODO: Перехід до суддівства етапів
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ParticipantSearchScreen(
+                                competitionId: competition.id,
+                                assignment: assignment,
+                              ),
+                            ),
+                          );
                         },
                       );
                     },

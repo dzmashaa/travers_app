@@ -347,27 +347,13 @@ class CompetitionRepository {
     });
   }
 
-  Future<void> addCompetitionParticipant(
-    String competitionId,
-    String participantUid,
-  ) async {
-    await _db
-        .collection(AppConstants.competitionsCollection)
-        .doc(competitionId)
-        .update({
-          'participantIds': FieldValue.arrayUnion([participantUid]),
-        });
-  }
-
   Future<void> generateMockParticipants(String competitionId) async {
     final batch = _db.batch();
 
-    // Посилання на документ самого змагання
     final competitionRef = _db
         .collection(AppConstants.competitionsCollection)
         .doc(competitionId);
 
-    // Підколекція для учасників цього змагання
     final participantsRef = competitionRef.collection('participants');
 
     final mockNames = [
