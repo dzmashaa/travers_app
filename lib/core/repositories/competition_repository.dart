@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/competition.dart';
+import 'package:travers_app/core/models/participant.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/models/stage_block.dart';
+import 'package:travers_app/core/utils/exeptions.dart';
 import 'package:uuid/uuid.dart';
 import '../models/distance.dart';
 import '../utils/app_constants.dart';
@@ -163,8 +165,9 @@ class CompetitionRepository {
           .doc(competitionId);
       final snapshot = await transaction.get(docRef);
 
-      if (!snapshot.exists || snapshot.data() == null)
-        throw Exception('Змагання не знайдено');
+      if (!snapshot.exists || snapshot.data() == null) {
+        throw AppException('Змагання не знайдено');
+      }
 
       final competition = CompetitionModel.fromMap(
         snapshot.data()!,
@@ -184,7 +187,7 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final index = distances.indexWhere((d) => d.id == updatedDistance.id);
-      if (index == -1) throw Exception('Дистанцію не знайдено');
+      if (index == -1) throw AppException('Дистанцію не знайдено');
       distances[index] = updatedDistance;
       return updatedDistance;
     });
@@ -197,7 +200,7 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
 
       final newBlock = StageBlock(
         id: _uuid.v4(),
@@ -222,11 +225,11 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
 
       final blocks = List<StageBlock>.from(distances[dIndex].stageBlocks);
       final bIndex = blocks.indexWhere((b) => b.id == blockId);
-      if (bIndex == -1) throw Exception('Блок не знайдено');
+      if (bIndex == -1) throw AppException('Блок не знайдено');
 
       final newStage = Stage(
         id: _uuid.v4(),
@@ -251,11 +254,11 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
 
       final blocks = List<StageBlock>.from(distances[dIndex].stageBlocks);
       final bIndex = blocks.indexWhere((b) => b.id == blockId);
-      if (bIndex == -1) throw Exception('Блок не знайдено');
+      if (bIndex == -1) throw AppException('Блок не знайдено');
 
       final currentJudges = List<String>.from(blocks[bIndex].judgeIds);
       if (!currentJudges.contains(judgeUid)) {
@@ -276,7 +279,7 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
 
       final updatedBlocks = distances[dIndex].stageBlocks
           .where((b) => b.id != blockId)
@@ -295,11 +298,11 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
 
       final blocks = List<StageBlock>.from(distances[dIndex].stageBlocks);
       final bIndex = blocks.indexWhere((b) => b.id == blockId);
-      if (bIndex == -1) throw Exception('Блок не знайдено');
+      if (bIndex == -1) throw AppException('Блок не знайдено');
       final updatedStages = blocks[bIndex].stages
           .where((s) => s.id != stageId)
           .toList();
@@ -323,6 +326,27 @@ class CompetitionRepository {
         });
   }
 
+  Future<void> updateBlockJudges({
+    required String competitionId,
+    required String distanceId,
+    required String blockId,
+    required List<String> newJudgeIds,
+  }) async {
+    await _modifyDistances(competitionId, (distances) {
+      final dIndex = distances.indexWhere((d) => d.id == distanceId);
+      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
+
+      final blocks = List<StageBlock>.from(distances[dIndex].stageBlocks);
+      final bIndex = blocks.indexWhere((b) => b.id == blockId);
+      if (bIndex == -1) throw AppException('Блок не знайдено');
+
+      blocks[bIndex] = blocks[bIndex].copyWith(judgeIds: newJudgeIds);
+      distances[dIndex] = distances[dIndex].copyWith(blocks: blocks);
+
+      return distances[dIndex];
+    });
+  }
+
   Future<void> addCompetitionParticipant(
     String competitionId,
     String participantUid,
@@ -333,5 +357,50 @@ class CompetitionRepository {
         .update({
           'participantIds': FieldValue.arrayUnion([participantUid]),
         });
+  }
+
+  Future<void> generateMockParticipants(String competitionId) async {
+    final batch = _db.batch();
+
+    // Посилання на документ самого змагання
+    final competitionRef = _db
+        .collection(AppConstants.competitionsCollection)
+        .doc(competitionId);
+
+    // Підколекція для учасників цього змагання
+    final participantsRef = competitionRef.collection('participants');
+
+    final mockNames = [
+      'Іваненко Іван',
+      'Петренко Петро',
+      'Шевченко Тарас',
+      'Косач Лариса',
+      'Франко Іван',
+      'Лисенко Микола',
+      'Бойко Василь',
+      'Коцюбинський Михайло',
+      'Стус Василь',
+      'Гончар Олесь',
+    ];
+    final List<String> generatedIds = [];
+
+    for (int i = 0; i < mockNames.length; i++) {
+      final docRef = participantsRef.doc();
+      generatedIds.add(docRef.id);
+
+      final participant = ParticipantModel(
+        id: docRef.id,
+        name: mockNames[i],
+        startNumber: i + 1,
+        teamName: 'Команда ${i % 3 + 1}',
+        coachName: 'Тренер ${i % 2 + 1}',
+      );
+
+      batch.set(docRef, participant.toMap());
+    }
+    batch.update(competitionRef, {
+      'participantIds': FieldValue.arrayUnion(generatedIds),
+    });
+    await batch.commit();
   }
 }

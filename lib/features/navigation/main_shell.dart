@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/features/competitions/screens/competitions.dart';
-import 'package:travers_app/features/judging/judging.dart';
+import 'package:travers_app/features/judging/screens/judging.dart';
 import 'package:travers_app/features/profile/profile.dart';
 
 class MainShell extends StatefulWidget {

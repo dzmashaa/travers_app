@@ -50,7 +50,8 @@ class DialogHelpers {
             TextField(
               controller: controller,
               autofocus: true,
-              textCapitalization: TextCapitalization.characters,
+              textCapitalization:
+                  TextCapitalization.characters, // Зручно для кодів
               decoration: const InputDecoration(
                 hintText: 'Введіть код...',
                 border: OutlineInputBorder(),

@@ -61,7 +61,7 @@ class Distance {
       view: view ?? this.view,
       classLevel: classLevel ?? this.classLevel,
       description: description ?? this.description,
-      stageBlocks: blocks ?? this.stageBlocks,
+      stageBlocks: blocks ?? stageBlocks,
     );
   }
 
