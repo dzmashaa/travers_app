@@ -35,6 +35,9 @@ class StageBlock {
               ?.map((e) => Stage.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
+      judgeIds: map['judgeIds'] != null
+          ? List<String>.from(map['judgeIds'])
+          : [],
     );
   }
 
@@ -43,6 +46,7 @@ class StageBlock {
       'id': id,
       'blockName': blockName,
       'stages': stages.map((s) => s.toMap()).toList(),
+      'judgeIds': judgeIds ?? [],
     };
   }
 }
