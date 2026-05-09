@@ -4,6 +4,7 @@ import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/competitions/providers/comp_filter_provider.dart';
+import 'package:travers_app/features/competitions/screens/competition_details.dart';
 import 'package:travers_app/features/competitions/widgets/add_competition.dart';
 import 'package:travers_app/features/auth/screens/home.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
@@ -88,6 +89,17 @@ class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
             CompetitionsList(
               competitionsAsync: ref.watch(filteredCompetitionsProvider),
               emptyMessage: "Змаганнь не знайдено",
+              onCompetitionTap: (competition) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CompetitionDetailsScreen(
+                      competitionId: competition.id,
+                      initialCompetition: competition,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

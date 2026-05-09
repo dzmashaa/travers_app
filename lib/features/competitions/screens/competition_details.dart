@@ -163,6 +163,34 @@ class CompetitionDetailsScreen extends ConsumerWidget {
               },
             ),
           const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.group_add_outlined),
+            tooltip: 'Згенерувати учасників',
+            onPressed: () async {
+              try {
+                await ref
+                    .read(competitionRepositoryProvider)
+                    .generateMockParticipants(competitionId);
+
+                if (context.mounted) {
+                  SnackbarUtils.show(
+                    context,
+                    '10 тестових учасників успішно додано!',
+                    isError: false,
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  SnackbarUtils.show(
+                    context,
+                    ErrorMapper.getHumanReadableMessage(e),
+                    isError: true,
+                  );
+                }
+              }
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: competitionAsyncValue.when(
@@ -284,6 +312,7 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final participantsCount = competition.participantIds.length;
 
     return Row(
       children: [
@@ -297,7 +326,7 @@ class _StatsRow extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(
           child: StatCard(
-            number: '0',
+            number: participantsCount.toString(),
             label: 'Учасників',
             numberColor: theme.colorScheme.secondary,
           ),

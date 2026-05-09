@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/competition.dart';
-import 'package:travers_app/features/competitions/screens/competition_details.dart';
 import 'package:travers_app/core/widgets/competition_card.dart';
 
 class CompetitionsList extends ConsumerWidget {
   final AsyncValue<List<CompetitionModel>> competitionsAsync;
   final String emptyMessage;
+  final void Function(CompetitionModel competition)? onCompetitionTap;
+
   const CompetitionsList({
     super.key,
     required this.competitionsAsync,
     required this.emptyMessage,
+    this.onCompetitionTap,
   });
 
   @override
@@ -35,15 +37,9 @@ class CompetitionsList extends ConsumerWidget {
               return CompetitionCard(
                 competition: competition,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CompetitionDetailsScreen(
-                        competitionId: competition.id,
-                        initialCompetition: competition,
-                      ),
-                    ),
-                  );
+                  if (onCompetitionTap != null) {
+                    onCompetitionTap!(competition);
+                  }
                 },
               );
             },
