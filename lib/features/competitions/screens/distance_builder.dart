@@ -12,8 +12,10 @@ import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sh
 import 'package:travers_app/core/utils/dialog_helpers.dart';
 import 'package:travers_app/core/utils/error_mapper.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/features/competitions/widgets/assign_judges.dart';
 import 'package:travers_app/features/competitions/widgets/distance_info_card.dart';
 import 'package:travers_app/features/competitions/widgets/stage_block_card.dart';
+import 'package:travers_app/features/judging/providers/judge_provider.dart';
 
 class DistanceBuilderScreen extends ConsumerStatefulWidget {
   final String competitionId;
@@ -116,6 +118,44 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
         );
   }
 
+  Future<void> _assignJudges(
+    StageBlock block,
+    Map<String, String> judgesMap,
+  ) async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AssignJudgesBottomSheet(
+        allCompetitionJudges: judgesMap,
+        initialSelectedIds: block.judgeIds ?? [],
+      ),
+    );
+    if (result == null || !mounted) return;
+    await ref
+        .read(distanceBuilderControllerProvider.notifier)
+        .updateBlockJudges(
+          competitionId: widget.competitionId,
+          distanceId: widget.distanceId,
+          blockId: block.id,
+          judgeIds: result,
+        );
+  }
+
+  Future<void> _deleteJudge(StageBlock block, String judgeId) async {
+    final currentJudges = List<String>.from(block.judgeIds ?? []);
+
+    currentJudges.remove(judgeId);
+    await ref
+        .read(distanceBuilderControllerProvider.notifier)
+        .updateBlockJudges(
+          competitionId: widget.competitionId,
+          distanceId: widget.distanceId,
+          blockId: block.id,
+          judgeIds: currentJudges,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -125,6 +165,14 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
 
     final role = ref.watch(roleProvider).value;
     final currentUserUid = ref.watch(currentUserUidProvider);
+
+    final competition = ref
+        .watch(competitionStreamProvider(widget.competitionId))
+        .value;
+    final judgesMapAsync = ref.watch(
+      competitionJudgesMapProvider(competition?.judgeIds ?? []),
+    );
+    final judgesMap = judgesMapAsync.value ?? {};
     ref.listen(distanceBuilderControllerProvider, (previous, next) {
       if (next.hasError && !next.isLoading) {
         SnackbarUtils.show(
@@ -215,13 +263,14 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
                       child: StageBlockCard(
                         block: block,
                         canEdit: canEdit,
+                        judgesMap: judgesMap,
                         onAddStage: () => _addStage(block),
-                        onAssignJudge: () {
-                          // TODO: Відкрити вікно вибору судді
-                        },
+                        onAssignJudge: () => _assignJudges(block, judgesMap),
                         onDeleteBlock: () => _deleteBlock(block),
                         onDeleteStage: (stageId) =>
                             _deleteStage(block.id, stageId),
+                        onDeleteJudge: (judgeId) =>
+                            _deleteJudge(block, judgeId),
                       ),
                     );
                   }, childCount: blocks.length),

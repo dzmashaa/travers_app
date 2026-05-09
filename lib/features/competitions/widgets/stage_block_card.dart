@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/models/stage_block.dart';
+import 'package:travers_app/features/competitions/widgets/judge_chip.dart';
 
 class StageBlockCard extends StatelessWidget {
   final StageBlock block;
   final bool canEdit;
+  final Map<String, String> judgesMap;
   final VoidCallback onAddStage;
   final VoidCallback onAssignJudge;
   final VoidCallback onDeleteBlock;
   final Function(String stageId) onDeleteStage;
+  final Function(String judgeId) onDeleteJudge;
 
   const StageBlockCard({
     super.key,
     required this.block,
     required this.canEdit,
+    required this.judgesMap,
     required this.onAddStage,
     required this.onAssignJudge,
     required this.onDeleteBlock,
     required this.onDeleteStage,
+    required this.onDeleteJudge,
   });
 
   @override
@@ -167,33 +172,54 @@ class StageBlockCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Судді:',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    block.judgeIds?.isEmpty ?? true
-                        ? 'Не призначено'
-                        : '2 судді',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
+              Text(
+                'Судді:',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               ),
               if (canEdit)
-                TextButton.icon(
+                OutlinedButton.icon(
                   onPressed: onAssignJudge,
                   icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
                   label: const Text('Призначити'),
-                  style: TextButton.styleFrom(
+                  style: OutlinedButton.styleFrom(
                     foregroundColor: theme.primaryColor,
+                    side: BorderSide(color: theme.primaryColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
                 ),
             ],
           ),
+
+          const SizedBox(height: 12),
+
+          if (block.judgeIds != null && block.judgeIds!.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: block.judgeIds!.map((judgeId) {
+                final judgeName = judgesMap[judgeId] ?? 'Завантаження...';
+
+                return JudgeChip(
+                  judgeName: judgeName,
+                  canEdit: canEdit,
+                  onDelete: () => onDeleteJudge(judgeId),
+                );
+              }).toList(),
+            )
+          else
+            const Text(
+              'Не призначено',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black54,
+              ),
+            ),
         ],
       ),
     );

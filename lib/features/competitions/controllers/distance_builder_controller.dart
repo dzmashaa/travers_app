@@ -88,4 +88,24 @@ class DistanceBuilderController extends AsyncNotifier<void> {
     });
     return !state.hasError;
   }
+
+  Future<bool> updateBlockJudges({
+    required String competitionId,
+    required String distanceId,
+    required String blockId,
+    required List<String> judgeIds,
+  }) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref
+          .read(competitionRepositoryProvider)
+          .updateBlockJudges(
+            competitionId: competitionId,
+            distanceId: distanceId,
+            blockId: blockId,
+            newJudgeIds: judgeIds,
+          );
+    });
+    return !state.hasError;
+  }
 }
