@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/distance.dart';
+import 'package:travers_app/core/widgets/title_value_column.dart';
+import 'package:travers_app/features/competitions/widgets/base_info_container.dart';
 
 class DistanceInfoCard extends StatelessWidget {
   final Distance distance;
@@ -17,25 +19,13 @@ class DistanceInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final hasDescription =
-        distance.description != null &&
-        distance.description.toString().isNotEmpty;
+        distance.description != null && distance.description!.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return BaseInfoContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Шапка
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -57,21 +47,26 @@ class DistanceInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _InfoRow(title: 'Тип', value: distance.type.displayName),
+
+          TitleValueColumn(title: 'Тип', value: distance.type.displayName),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                child: _InfoRow(
+                child: TitleValueColumn(
                   title: 'Клас',
                   value: '${distance.classLevel} клас',
                 ),
               ),
               Expanded(
-                child: _InfoRow(title: 'Вид', value: distance.view.displayName),
+                child: TitleValueColumn(
+                  title: 'Вид',
+                  value: distance.view.displayName,
+                ),
               ),
             ],
           ),
+
           if (hasDescription) ...[
             const SizedBox(height: 12),
             const Divider(),
@@ -85,32 +80,6 @@ class DistanceInfoCard extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String title;
-  final String value;
-  const _InfoRow({required this.title, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.black45),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-      ],
     );
   }
 }

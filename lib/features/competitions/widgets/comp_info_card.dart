@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/utils/date_formatters.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/features/competitions/widgets/base_info_container.dart';
 import 'package:travers_app/features/competitions/widgets/comp_status.dart';
+import 'package:travers_app/features/competitions/widgets/icon_text_row.dart';
 
 class CompInfoCard extends StatelessWidget {
   final CompetitionModel competition;
@@ -25,20 +27,11 @@ class CompInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(
+      fontSize: 16,
+    ); // Спільний стиль тексту
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return BaseInfoContainer(
       child: Stack(
         children: [
           Column(
@@ -48,71 +41,32 @@ class CompInfoCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CompStatusBadge(status: competition.status, fontSize: 14.0),
-                  GestureDetector(
-                    onTap: () => _copyCode(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy, size: 14, color: theme.primaryColor),
-                          const SizedBox(width: 6),
-                          Text(
-                            competition.inviteCode,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: theme.primaryColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildCopyCodeButton(theme, context),
                 ],
               ),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 20,
-                    color: theme.textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    competition.location,
-                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-                  ),
-                ],
+
+              IconTextRow(
+                icon: Icons.location_on,
+                text: competition.location,
+                textStyle: textStyle,
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_month,
-                    size: 20,
-                    color: theme.textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    formatDateRange(competition.startDate, competition.endDate),
-                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: 16),
-                  ),
-                ],
+              IconTextRow(
+                icon: Icons.calendar_month,
+                text: formatDateRange(
+                  competition.startDate,
+                  competition.endDate,
+                ),
+                textStyle: textStyle,
               ),
             ],
           ),
 
           if (canEdit)
             Positioned(
-              right: 8,
-              bottom: 8,
+              right: 0,
+              bottom: 0,
               child: IconButton(
                 onPressed: onDelete,
                 icon: Icon(
@@ -123,6 +77,32 @@ class CompInfoCard extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCopyCodeButton(ThemeData theme, BuildContext context) {
+    return GestureDetector(
+      onTap: () => _copyCode(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.primaryColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.copy, size: 14, color: theme.primaryColor),
+            const SizedBox(width: 6),
+            Text(
+              competition.inviteCode,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.primaryColor,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
