@@ -46,7 +46,7 @@ class StageBlock {
       'id': id,
       'blockName': blockName,
       'stages': stages.map((s) => s.toMap()).toList(),
-      'judgeIds': judgeIds ?? [],
+      'judgeIds': judgeIds,
     };
   }
 }

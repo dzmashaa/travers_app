@@ -128,7 +128,7 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => AssignJudgesBottomSheet(
         allCompetitionJudges: judgesMap,
-        initialSelectedIds: block.judgeIds ?? [],
+        initialSelectedIds: block.judgeIds,
       ),
     );
     if (result == null || !mounted) return;
@@ -143,7 +143,7 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
   }
 
   Future<void> _deleteJudge(StageBlock block, String judgeId) async {
-    final currentJudges = List<String>.from(block.judgeIds ?? []);
+    final currentJudges = List<String>.from(block.judgeIds);
 
     currentJudges.remove(judgeId);
     await ref
@@ -222,7 +222,7 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
               isCreator &&
               competition.status != CompetitionStatus.completed;
 
-          final blocks = distance.stageBlocks ?? [];
+          final blocks = distance.stageBlocks;
 
           return CustomScrollView(
             slivers: [

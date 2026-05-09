@@ -20,7 +20,7 @@ class JudgeAssignmentsScreen extends ConsumerWidget {
     if (currentUserId != null) {
       for (final distance in competition.distances) {
         for (final block in distance.stageBlocks) {
-          if (block.judgeIds?.contains(currentUserId) == true) {
+          if (block.judgeIds.contains(currentUserId) == true) {
             assignments.add(JudgeAssignment(distance: distance, block: block));
           }
         }
