@@ -8,6 +8,7 @@ import 'package:travers_app/features/competitions/widgets/filter_bar.dart';
 import 'package:travers_app/features/judging/controllers/judjing_controller.dart';
 import 'package:travers_app/features/judging/providers/judge_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:travers_app/features/judging/screens/judge_assignment.dart';
 
 class JudgingScreen extends ConsumerWidget {
   const JudgingScreen({super.key});
@@ -46,6 +47,15 @@ class JudgingScreen extends ConsumerWidget {
             competitionsAsync: ref.watch(filteredJudgeCompetitionsProvider),
             emptyMessage:
                 'Ви ще не є суддею жодного змагання\n (або за обраним фільтром змагань немає)',
+            onCompetitionTap: (competition) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      JudgeAssignmentsScreen(competition: competition),
+                ),
+              );
+            },
           ),
         ],
       ),
