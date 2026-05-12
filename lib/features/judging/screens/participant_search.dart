@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/distance.dart';
+import 'package:travers_app/core/models/judging_target.dart';
 import 'package:travers_app/core/models/participant.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
 import 'package:travers_app/features/judging/providers/judge_provider.dart';
 import 'package:travers_app/features/judging/providers/participants_provider.dart';
+import 'package:travers_app/features/judging/screens/active_judging.dart';
 import 'package:travers_app/features/judging/widgets/participant_card.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Твої імпорти моделей, карток та утиліт
 
 class ParticipantSearchScreen extends ConsumerStatefulWidget {
   final String competitionId;
@@ -50,19 +48,29 @@ class _ParticipantSearchScreenState
     });
   }
 
-  Map<String, int> _getFilteredTeams(List<ParticipantModel> participants) {
-    final Map<String, int> teamCounts = {};
-    for (final p in participants) {
-      teamCounts[p.teamName] = (teamCounts[p.teamName] ?? 0) + 1;
-    }
-
-    if (_searchQuery.isEmpty) return teamCounts;
-
-    final query = _searchQuery.toLowerCase();
-    teamCounts.removeWhere(
-      (teamName, _) => !teamName.toLowerCase().contains(query),
+  void _navigateToJudging(JudgingTarget target) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActiveJudgingScreen(
+          target: target,
+          block: widget.assignment.block,
+          competitionId: widget.competitionId,
+        ),
+      ),
     );
-    return teamCounts;
+  }
+
+  List<String> _getFilteredTeams(List<ParticipantModel> participants) {
+    final uniqueTeams = participants.map((p) => p.teamName).toSet();
+
+    if (_searchQuery.isEmpty) {
+      return uniqueTeams.toList();
+    }
+    final query = _searchQuery.toLowerCase();
+    return uniqueTeams
+        .where((teamName) => teamName.toLowerCase().contains(query))
+        .toList();
   }
 
   List<ParticipantModel> _getFilteredParticipants(
@@ -92,7 +100,9 @@ class _ParticipantSearchScreenState
               selectedCount: _selectedBunchParticipants.length,
               theme: theme,
               onStart: () {
-                /* TODO: Перехід до зв'язки */
+                final pairList = _selectedBunchParticipants.toList();
+                final target = JudgingTarget.fromPair(pairList);
+                _navigateToJudging(target);
               },
             )
           : null,
@@ -120,7 +130,13 @@ class _ParticipantSearchScreenState
                 }
                 if (isTeam) {
                   final filteredTeams = _getFilteredTeams(participants);
-                  return _TeamList(teams: filteredTeams);
+                  return _TeamList(
+                    teams: filteredTeams,
+                    onTeamTap: (teamName) {
+                      final target = JudgingTarget.fromTeam(teamName);
+                      _navigateToJudging(target);
+                    },
+                  );
                 } else {
                   final filteredList = _getFilteredParticipants(participants);
                   return _ParticipantList(
@@ -128,6 +144,10 @@ class _ParticipantSearchScreenState
                     selectedParticipants: _selectedBunchParticipants,
                     isPairMode: isPair,
                     onToggleSelect: _toggleParticipantSelection,
+                    onParticipantTap: (participant) {
+                      final target = JudgingTarget.fromParticipant(participant);
+                      _navigateToJudging(target);
+                    },
                   );
                 }
               },
@@ -212,25 +232,19 @@ class _SearchBar extends StatelessWidget {
 }
 
 class _TeamList extends StatelessWidget {
-  final Map<String, int> teams;
+  final List<String> teams;
+  final Function(String teamName) onTeamTap;
 
-  const _TeamList({required this.teams});
+  const _TeamList({required this.teams, required this.onTeamTap});
 
   @override
   Widget build(BuildContext context) {
-    final teamNames = teams.keys.toList();
-
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      itemCount: teamNames.length,
+      itemCount: teams.length,
       itemBuilder: (context, index) {
-        final teamName = teamNames[index];
-        return TeamCard(
-          teamName: teamName,
-          onTap: () {
-            /* TODO: Перехід до суддівства команди */
-          },
-        );
+        final teamName = teams[index];
+        return TeamCard(teamName: teamName, onTap: () => onTeamTap(teamName));
       },
     );
   }
@@ -241,12 +255,14 @@ class _ParticipantList extends StatelessWidget {
   final Set<ParticipantModel> selectedParticipants;
   final bool isPairMode;
   final ValueChanged<ParticipantModel> onToggleSelect;
+  final Function(ParticipantModel) onParticipantTap;
 
   const _ParticipantList({
     required this.participants,
     required this.selectedParticipants,
     required this.isPairMode,
     required this.onToggleSelect,
+    required this.onParticipantTap,
   });
 
   @override
@@ -264,7 +280,7 @@ class _ParticipantList extends StatelessWidget {
           isSelected: isSelected,
           onTap: () {
             if (!isPairMode) {
-              /* TODO: Перехід до суддівства 1 учасника */
+              onParticipantTap(participant);
             }
           },
           onSelectChanged: (_) => onToggleSelect(participant),

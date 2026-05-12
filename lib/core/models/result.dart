@@ -1,77 +1,105 @@
-class Penalty {
-  final String stageName;
-  final String code;
-  final int points;
+class AppliedPenalty {
+  final String id;
+  final String stageId;
+  final String penaltyCode;
   final String reason;
+  final int points;
+  final bool isDisqualification;
 
-  Penalty({
-    required this.stageName,
-    required this.code,
-    required this.points,
+  AppliedPenalty({
+    required this.id,
+    required this.stageId,
+    required this.penaltyCode,
     required this.reason,
+    required this.points,
+    this.isDisqualification = false,
   });
 
-  factory Penalty.fromMap(Map<String, dynamic> map) {
-    return Penalty(
-      stageName: map['stageName'] ?? '',
-      code: map['code'] ?? '',
-      points: map['points'] ?? 0,
+  factory AppliedPenalty.fromMap(Map<String, dynamic> map) {
+    return AppliedPenalty(
+      id: map['id'] ?? '',
+      stageId: map['stageId'] ?? '',
+      penaltyCode: map['penaltyCode'] ?? '',
       reason: map['reason'] ?? '',
+      points: map['points'] ?? 0,
+      isDisqualification: map['isDisqualification'] ?? false,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'stageName': stageName,
-      'code': code,
-      'points': points,
+      'id': id,
+      'stageId': stageId,
+      'penaltyCode': penaltyCode,
       'reason': reason,
+      'points': points,
+      'isDisqualification': isDisqualification,
     };
   }
 }
 
 class ResultModel {
   final String id;
-  final String participantId;
+  final String targetId;
   final String blockId;
   final String judgeId;
   final int timeTotalMs;
   final int penaltiesSum;
-  final List<Penalty> penaltiesList;
+  final List<AppliedPenalty> appliedPenalties;
 
   ResultModel({
     required this.id,
-    required this.participantId,
+    required this.targetId,
     required this.blockId,
     required this.judgeId,
     required this.timeTotalMs,
     required this.penaltiesSum,
-    required this.penaltiesList,
+    required this.appliedPenalties,
   });
 
   factory ResultModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var penalties = map['penaltiesList'] as List? ?? [];
+    final penaltiesData = map['appliedPenalties'] as List? ?? [];
     return ResultModel(
       id: documentId,
-      participantId: map['participantId'] ?? '',
+      targetId: map['targetId'] ?? '',
       blockId: map['blockId'] ?? '',
       judgeId: map['judgeId'] ?? '',
       timeTotalMs: map['timeTotalMs'] ?? 0,
       penaltiesSum: map['penaltiesSum'] ?? 0,
-      penaltiesList: penalties
-          .map((p) => Penalty.fromMap(p as Map<String, dynamic>))
+      appliedPenalties: penaltiesData
+          .map((p) => AppliedPenalty.fromMap(p as Map<String, dynamic>))
           .toList(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'participantId': participantId,
+      'targetId': targetId,
       'blockId': blockId,
       'judgeId': judgeId,
       'timeTotalMs': timeTotalMs,
       'penaltiesSum': penaltiesSum,
-      'penaltiesList': penaltiesList.map((p) => p.toMap()).toList(),
+      'appliedPenalties': appliedPenalties.map((p) => p.toMap()).toList(),
     };
+  }
+
+  ResultModel copyWith({
+    String? id,
+    String? targetId,
+    String? blockId,
+    String? judgeId,
+    int? timeTotalMs,
+    int? penaltiesSum,
+    List<AppliedPenalty>? appliedPenalties,
+  }) {
+    return ResultModel(
+      id: id ?? this.id,
+      targetId: targetId ?? this.targetId,
+      blockId: blockId ?? this.blockId,
+      judgeId: judgeId ?? this.judgeId,
+      timeTotalMs: timeTotalMs ?? this.timeTotalMs,
+      penaltiesSum: penaltiesSum ?? this.penaltiesSum,
+      appliedPenalties: appliedPenalties ?? this.appliedPenalties,
+    );
   }
 }

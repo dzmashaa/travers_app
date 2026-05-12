@@ -25,7 +25,6 @@ class DistanceInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Шапка
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
