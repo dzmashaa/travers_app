@@ -113,10 +113,46 @@ class CompetitionRepository {
   }
 
   Future<void> deleteCompetition(String competitionId) async {
-    await _db
+    final compRef = _db
         .collection(AppConstants.competitionsCollection)
-        .doc(competitionId)
-        .delete();
+        .doc(competitionId);
+    final subcollections = ['results', 'participants'];
+
+    for (final collectionName in subcollections) {
+      bool hasMoreDocuments = true;
+
+      while (hasMoreDocuments) {
+        final snapshot = await compRef
+            .collection(collectionName)
+            .limit(490)
+            .get(const GetOptions(source: Source.serverAndCache));
+
+        if (snapshot.docs.isEmpty) {
+          hasMoreDocuments = false;
+          break;
+        }
+
+        final batch = _db.batch();
+        for (final doc in snapshot.docs) {
+          batch.delete(doc.reference);
+        }
+
+        await batch.commit().timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw Exception(
+              'Сервер не відповідає під час видалення $collectionName',
+            );
+          },
+        );
+      }
+    }
+    await compRef.delete().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        throw Exception('Сервер не відповідає під час видалення змагання');
+      },
+    );
   }
 
   Future<void> addDistance({
@@ -143,16 +179,71 @@ class CompetitionRepository {
         });
   }
 
-  Future<void> deleteDistance({
+  Future<void> deleteDistanceWithResults({
     required String competitionId,
     required Distance distance,
   }) async {
-    await _db
+    final compRef = _db
         .collection(AppConstants.competitionsCollection)
-        .doc(competitionId)
-        .update({
-          'distances': FieldValue.arrayRemove([distance.toMap()]),
-        });
+        .doc(competitionId);
+    bool hasOperations = false;
+    final batch = _db.batch();
+
+    final blockIds = distance.stageBlocks.map((b) => b.id).toList() ?? [];
+    if (blockIds.isNotEmpty) {
+      try {
+        for (var i = 0; i < blockIds.length; i += 10) {
+          final chunk = blockIds.sublist(
+            i,
+            i + 10 > blockIds.length ? blockIds.length : i + 10,
+          );
+
+          final resultsSnapshot = await compRef
+              .collection('results')
+              .where('blockId', whereIn: chunk)
+              .get(const GetOptions(source: Source.serverAndCache))
+              .timeout(const Duration(seconds: 5));
+
+          for (final doc in resultsSnapshot.docs) {
+            batch.delete(doc.reference);
+            hasOperations = true;
+          }
+        }
+      } catch (e) {
+        throw Exception('Не вдалося отримати результати для видалення');
+      }
+    }
+
+    try {
+      final snapshot = await compRef
+          .get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(seconds: 5));
+
+      if (snapshot.exists && snapshot.data() != null) {
+        final distancesArray =
+            snapshot.data()!['distances'] as List<dynamic>? ?? [];
+        final newDistancesArray = distancesArray
+            .where((d) => d['id'] != distance.id)
+            .toList();
+
+        if (newDistancesArray.length < distancesArray.length) {
+          batch.update(compRef, {'distances': newDistancesArray});
+          hasOperations = true;
+        }
+      }
+    } catch (e) {
+      throw Exception('Не вдалося завантажити дані змагання');
+    }
+
+    if (hasOperations) {
+      try {
+        await batch.commit().timeout(const Duration(seconds: 5));
+      } catch (e) {
+        throw Exception('Сервер не відповідає при збереженні');
+      }
+    } else {
+      throw Exception('Дистанцію не знайдено в базі даних');
+    }
   }
 
   Future<void> _modifyDistances(
@@ -166,7 +257,7 @@ class CompetitionRepository {
       final snapshot = await transaction.get(docRef);
 
       if (!snapshot.exists || snapshot.data() == null) {
-        throw AppException('Змагання не знайдено');
+        throw Exception('Змагання не знайдено');
       }
 
       final competition = CompetitionModel.fromMap(
@@ -200,7 +291,7 @@ class CompetitionRepository {
   }) async {
     await _modifyDistances(competitionId, (distances) {
       final dIndex = distances.indexWhere((d) => d.id == distanceId);
-      if (dIndex == -1) throw AppException('Дистанцію не знайдено');
+      if (dIndex == -1) throw Exception('Дистанцію не знайдено');
 
       final newBlock = StageBlock(
         id: _uuid.v4(),

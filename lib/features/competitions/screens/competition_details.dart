@@ -7,6 +7,7 @@ import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/competitions/screens/leaderboard.dart';
 import 'package:travers_app/features/competitions/widgets/add_competition.dart';
 import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';
 import 'package:travers_app/features/competitions/screens/distance_builder.dart';
@@ -42,36 +43,46 @@ class CompetitionDetailsScreen extends ConsumerWidget {
     WidgetRef ref,
     Distance distance,
   ) async {
-    final distanceName = distance.type.displayName;
-
     final shouldDelete = await DialogHelpers.showConfirmDialog(
       context,
       title: 'Видалення дистанції',
       content:
-          'Ви впевнені, що хочете видалити дистанцію "$distanceName"? Цю дію неможливо скасувати.',
+          'УВАГА: Це видалить усі блоки та збережені результати учасників для цієї дистанції. Цю дію неможливо скасувати.',
+      confirmText: 'Видалити',
     );
 
-    if (!shouldDelete || !context.mounted) return;
+    if (!shouldDelete) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final primaryColor = Theme.of(context).primaryColor;
+
+    if (context.mounted) {
+      SnackbarUtils.showLoading(
+        context,
+        'Видалення дистанції та результатів...',
+      );
+    }
     try {
       await ref
           .read(competitionRepositoryProvider)
-          .deleteDistance(competitionId: competitionId, distance: distance);
-
-      if (context.mounted) {
-        SnackbarUtils.show(
-          context,
-          'Дистанцію успішно видалено',
-          isError: false,
-        );
-      }
+          .deleteDistanceWithResults(
+            competitionId: competitionId,
+            distance: distance,
+          );
+      SnackbarUtils.hideSafe(messenger);
+      SnackbarUtils.showSafe(
+        messenger: messenger,
+        primaryColor: primaryColor,
+        message: 'Дистанцію успішно видалено',
+        isError: false,
+      );
     } catch (e) {
-      if (context.mounted) {
-        SnackbarUtils.show(
-          context,
-          ErrorMapper.getHumanReadableMessage(e),
-          isError: true,
-        );
-      }
+      SnackbarUtils.hideSafe(messenger);
+      SnackbarUtils.showSafe(
+        messenger: messenger,
+        primaryColor: primaryColor,
+        message: 'Помилка: $e',
+        isError: true,
+      );
     }
   }
 
@@ -83,33 +94,40 @@ class CompetitionDetailsScreen extends ConsumerWidget {
       context,
       title: 'Видалення змагання',
       content:
-          'Ви впевнені, що хочете видалити це змагання назавжди? Усі пов\'язані дані будуть втрачені.',
+          'Ви впевнені, що хочете видалити це змагання назавжди? Усі пов\'язані дані (дистанції, учасники, результати) будуть втрачені без можливості відновлення.',
     );
 
     if (!shouldDelete || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final primaryColor = Theme.of(context).primaryColor;
+
+    SnackbarUtils.showLoading(context, 'Видалення всіх даних змагання...');
 
     try {
       await ref
           .read(competitionRepositoryProvider)
           .deleteCompetition(competitionId);
 
-      if (context.mounted) {
-        SnackbarUtils.show(
-          context,
-          'Змагання успішно видалено',
-          isError: false,
-        );
+      ref.invalidate(allCompetitionsStreamProvider);
 
+      if (context.mounted) {
         Navigator.pop(context);
       }
+      SnackbarUtils.hideSafe(messenger);
+      SnackbarUtils.showSafe(
+        messenger: messenger,
+        message: 'Змагання та всі пов\'язані дані видалено',
+        primaryColor: primaryColor,
+        isError: false,
+      );
     } catch (e) {
-      if (context.mounted) {
-        SnackbarUtils.show(
-          context,
-          ErrorMapper.getHumanReadableMessage(e),
-          isError: true,
-        );
-      }
+      SnackbarUtils.hideSafe(messenger);
+      SnackbarUtils.showSafe(
+        messenger: messenger,
+        message: ErrorMapper.getHumanReadableMessage(e),
+        primaryColor: primaryColor,
+        isError: true,
+      );
     }
   }
 
@@ -299,6 +317,40 @@ class CompetitionDetailsScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 16,
+        ),
+        color: theme.scaffoldBackgroundColor,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LeaderboardScreen(
+                  competitionId: competitionId,
+                  competitionName: currentCompetition.title,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.emoji_events, color: Colors.white),
+          label: Text(
+            'Перейти до турнірних таблиць',
+            style: theme.textTheme.labelLarge?.copyWith(color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.primaryColor,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
       ),
     );
   }
