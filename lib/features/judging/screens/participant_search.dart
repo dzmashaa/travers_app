@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/distance.dart';
 import 'package:travers_app/core/models/judging_target.dart';
@@ -48,8 +49,8 @@ class _ParticipantSearchScreenState
     });
   }
 
-  void _navigateToJudging(JudgingTarget target) {
-    Navigator.push(
+  Future<void> _navigateToJudging(JudgingTarget target) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ActiveJudgingScreen(
@@ -59,6 +60,12 @@ class _ParticipantSearchScreenState
         ),
       ),
     );
+
+    if (mounted) {
+      setState(() {
+        _selectedBunchParticipants.clear();
+      });
+    }
   }
 
   List<String> _getFilteredTeams(List<ParticipantModel> participants) {
@@ -88,9 +95,11 @@ class _ParticipantSearchScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final participantsAsync = ref.watch(
-      competitionParticipantsProvider(widget.competitionId),
+    final params = (
+      compId: widget.competitionId,
+      blockId: widget.assignment.block.id,
     );
+    final participantsAsync = ref.watch(availableParticipantsProvider(params));
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -161,6 +170,7 @@ class _ParticipantSearchScreenState
   PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
       backgroundColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black87),

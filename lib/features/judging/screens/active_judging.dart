@@ -1,14 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/judging_target.dart';
 import 'package:travers_app/core/models/penalty_rule.dart';
 import 'package:travers_app/core/models/result.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/models/stage_block.dart';
+import 'package:travers_app/core/utils/dialog_helpers.dart';
+import 'package:travers_app/core/utils/snackbar_utils.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/features/judging/controllers/judging_timer_controller.dart';
+import 'package:travers_app/features/judging/repository/judging_repository.dart';
 import 'package:travers_app/features/judging/widgets/penalty_selection.dart';
+import 'package:travers_app/features/judging/widgets/time_edit_dialog.dart';
 
 class ActiveJudgingScreen extends ConsumerStatefulWidget {
   final JudgingTarget target;
@@ -81,21 +86,24 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
     }
   }
 
-  void _removePenalty(String stageId, AppliedPenalty penalty) {
-    setState(() {
-      _stagePenalties[stageId]!.remove(penalty);
-    });
-  }
-
   Future<void> _saveResult() async {
-    _timerController.stop();
+    _timerController.pause();
+
+    final confirm = await DialogHelpers.showConfirmDialog(
+      context,
+      title: 'Зберегти результат?',
+      content:
+          'Переконайтеся, що всі штрафи вказано правильно. '
+          'Після збереження результат буде відправлено на сервер, '
+          'а учасник зникне зі списку очікування.',
+      confirmText: 'Зберегти',
+    );
+    if (confirm != true) return;
 
     final List<AppliedPenalty> allPenalties = _stagePenalties.values
         .expand((list) => list)
         .toList();
-
     final currentJudgeId = ref.read(currentUserUidProvider) ?? '';
-
     final result = ResultModel(
       id: '',
       targetId: widget.target.id,
@@ -107,10 +115,21 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
     );
 
     try {
-      // await ref.read(judgingRepositoryProvider).saveResult(widget.competitionId, result);
-      if (mounted) Navigator.pop(context);
+      await ref
+          .read(judgingRepositoryProvider)
+          .saveResult(competitionId: widget.competitionId, result: result);
+      if (mounted) {
+        SnackbarUtils.show(
+          context,
+          'Результат успішно збережено!',
+          isError: false,
+        );
+        Navigator.pop(context);
+      }
     } catch (e) {
-      // SnackbarUtils.show(context, e.toString());
+      if (mounted) {
+        SnackbarUtils.show(context, e.toString(), isError: true);
+      }
     }
   }
 
@@ -156,6 +175,7 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
   PreferredSizeWidget _buildAppBar(ThemeData theme) {
     return AppBar(
       backgroundColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black87),
@@ -253,7 +273,7 @@ class _TimerPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -270,6 +290,7 @@ class _TimerPanel extends StatelessWidget {
         builder: (context, _) {
           return Column(
             children: [
+              // ТАЙМЕР ПО ЦЕНТРУ
               Text(
                 controller.getFormattedTime(),
                 style: const TextStyle(
@@ -280,24 +301,20 @@ class _TimerPanel extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 28),
+
+              // ТРИ КНОПКИ В РЯД
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  InkWell(
+                  // 1. СКИНУТИ ЧАС (Ліворуч)
+                  _buildSideButton(
+                    icon: Icons.refresh,
                     onTap: controller.reset,
-                    borderRadius: BorderRadius.circular(40),
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.refresh, color: Colors.grey.shade600),
-                    ),
                   ),
                   const SizedBox(width: 24),
+
+                  // 2. СТАРТ / ПАУЗА (По центру)
                   InkWell(
                     onTap: controller.toggle,
                     borderRadius: BorderRadius.circular(50),
@@ -322,11 +339,54 @@ class _TimerPanel extends StatelessWidget {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 24),
+
+                  // 3. РЕДАГУВАТИ ЧАС (Праворуч)
+                  _buildSideButton(
+                    icon: Icons.edit_outlined,
+                    onTap: () async {
+                      controller
+                          .pause(); // Таймер автоматично стає на паузу при відкритті вікна
+
+                      final newMilliseconds = await showDialog<int>(
+                        context: context,
+                        builder: (ctx) => ManualTimeEditDialog(
+                          initialMilliseconds: controller.elapsedMilliseconds,
+                        ),
+                      );
+
+                      if (newMilliseconds != null) {
+                        controller.setTime(
+                          newMilliseconds,
+                        ); // Одразу оновить UI
+                      }
+                    },
+                  ),
                 ],
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  // Допоміжний віджет для однакових бокових кнопок
+  Widget _buildSideButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.grey.shade600),
       ),
     );
   }

@@ -20,20 +20,16 @@ class JudgingTarget {
   }
 
   factory JudgingTarget.fromPair(List<ParticipantModel> pair) {
-    pair.sort((a, b) => a.id.compareTo(b.id));
-
+    final combinedId = '${pair[0].id},${pair[1].id}';
+    final combinedTitle = '${pair[0].name} / ${pair[1].name}';
     return JudgingTarget(
-      id: 'pair_${pair[0].id}_${pair[1].id}',
-      title: '${pair[0].name} та ${pair[1].name}',
-      subtitle: 'Зв\'язка • ${pair[0].teamName}',
+      id: combinedId,
+      title: combinedTitle,
+      subtitle: 'Зв\'язка',
     );
   }
 
   factory JudgingTarget.fromTeam(String teamName) {
-    return JudgingTarget(
-      id: 'team_$teamName',
-      title: 'Команда: $teamName',
-      subtitle: 'Командна дистанція',
-    );
+    return JudgingTarget(id: teamName, title: teamName, subtitle: 'Команда');
   }
 }
