@@ -26,6 +26,8 @@ class _AddCompetitionBottomSheetState
   DateTime? _endDate;
   bool _isLoading = false;
 
+  String? _dateError;
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +69,7 @@ class _AddCompetitionBottomSheetState
 
     if (picked != null) {
       setState(() {
+        _dateError = null;
         if (isStartDate) {
           _startDate = picked;
           if (_endDate != null && _endDate!.isBefore(_startDate!)) {
@@ -84,11 +87,9 @@ class _AddCompetitionBottomSheetState
     _formKey.currentState!.save();
 
     if (_startDate == null || _endDate == null) {
-      SnackbarUtils.show(
-        context,
-        'Будь ласка, оберіть дати проведення змагання',
-        isError: true,
-      );
+      setState(() {
+        _dateError = 'Оберіть дати проведення змагання';
+      });
       return;
     }
 
@@ -110,7 +111,7 @@ class _AddCompetitionBottomSheetState
           Navigator.pop(context);
         } else {
           if (widget.competition == null) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => CompetitionDetailsScreen(
@@ -231,6 +232,18 @@ class _AddCompetitionBottomSheetState
                         ),
                       ],
                     ),
+                    if (_dateError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, left: 16),
+                        child: Text(
+                          _dateError!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
