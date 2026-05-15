@@ -440,44 +440,65 @@ class CompetitionRepository {
 
   Future<void> generateMockParticipants(String competitionId) async {
     final batch = _db.batch();
-
     final competitionRef = _db
         .collection(AppConstants.competitionsCollection)
         .doc(competitionId);
-
     final participantsRef = competitionRef.collection('participants');
 
-    final mockNames = [
-      'Іваненко Іван',
-      'Петренко Петро',
-      'Шевченко Тарас',
-      'Косач Лариса',
-      'Франко Іван',
-      'Лисенко Микола',
-      'Бойко Василь',
-      'Коцюбинський Михайло',
-      'Стус Василь',
-      'Гончар Олесь',
+    // 20 реалістичних учасників
+    final mockData = [
+      (name: 'Іваненко Іван', gender: Gender.male),
+      (name: 'Петренко Петро', gender: Gender.male),
+      (name: 'Шевченко Тарас', gender: Gender.male),
+      (name: 'Косач Лариса', gender: Gender.female),
+      (name: 'Франко Іван', gender: Gender.male),
+      (name: 'Лисенко Микола', gender: Gender.male),
+      (name: 'Бойко Василь', gender: Gender.male),
+      (name: 'Коцюбинський Михайло', gender: Gender.male),
+      (name: 'Стус Василь', gender: Gender.male),
+      (name: 'Гончар Олесь', gender: Gender.male),
+      (name: 'Українка Леся', gender: Gender.female),
+      (name: 'Котляревський Іван', gender: Gender.male),
+      (name: 'Кобилянська Ольга', gender: Gender.female),
+      (name: 'Симоненко Василь', gender: Gender.male),
+      (name: 'Теліга Олена', gender: Gender.female),
+      (name: 'Довженко Олександр', gender: Gender.male),
+      (name: 'Забужко Оксана', gender: Gender.female),
+      (name: 'Андрухович Юрій', gender: Gender.male),
+      (name: 'Костенко Ліна', gender: Gender.female),
+      (name: 'Винничук Юрій', gender: Gender.male),
+    ];
+
+    final regions = [
+      'Київська обл.',
+      'Львівська обл.',
+      'Харківська обл.',
+      'Одеська обл.',
+      'Дніпропетровська обл.',
     ];
     final List<String> generatedIds = [];
 
-    for (int i = 0; i < mockNames.length; i++) {
+    for (int i = 0; i < mockData.length; i++) {
       final docRef = participantsRef.doc();
       generatedIds.add(docRef.id);
 
       final participant = ParticipantModel(
         id: docRef.id,
-        name: mockNames[i],
+        name: mockData[i].name,
         startNumber: i + 1,
-        teamName: 'Команда ${i % 3 + 1}',
-        coachName: 'Тренер ${i % 2 + 1}',
+        teamName: 'Команда ${i % 5 + 1}',
+        coachName: 'Тренер ${i % 3 + 1}',
+        gender: mockData[i].gender,
+        region: regions[i % 5],
       );
 
       batch.set(docRef, participant.toMap());
     }
+
     batch.update(competitionRef, {
       'participantIds': FieldValue.arrayUnion(generatedIds),
     });
+
     await batch.commit();
   }
 }

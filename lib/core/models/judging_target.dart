@@ -4,11 +4,15 @@ class JudgingTarget {
   final String id;
   final String title;
   final String subtitle;
+  final Gender? gender;
+  final String region;
 
   JudgingTarget({
     required this.id,
     required this.title,
     required this.subtitle,
+    this.gender,
+    this.region = '',
   });
 
   factory JudgingTarget.fromParticipant(ParticipantModel p) {
@@ -16,6 +20,8 @@ class JudgingTarget {
       id: p.id,
       title: p.name,
       subtitle: '№${p.startNumber} • ${p.teamName}',
+      gender: p.gender,
+      region: p.region,
     );
   }
 
