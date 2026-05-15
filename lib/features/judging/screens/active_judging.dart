@@ -113,23 +113,18 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
       penaltiesSum: _totalPoints,
       appliedPenalties: allPenalties,
     );
+    ref
+        .read(judgingRepositoryProvider)
+        .saveResult(competitionId: widget.competitionId, result: result);
+    if (mounted) {
+      Navigator.pop(context);
 
-    try {
-      await ref
-          .read(judgingRepositoryProvider)
-          .saveResult(competitionId: widget.competitionId, result: result);
-      if (mounted) {
-        SnackbarUtils.show(
-          context,
-          'Результат успішно збережено!',
-          isError: false,
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        SnackbarUtils.show(context, e.toString(), isError: true);
-      }
+      SnackbarUtils.showSafe(
+        messenger: ScaffoldMessenger.of(context),
+        primaryColor: Theme.of(context).primaryColor,
+        message: 'Результат збережено (синхронізується автоматично)',
+        isError: false,
+      );
     }
   }
 
@@ -290,7 +285,6 @@ class _TimerPanel extends StatelessWidget {
         builder: (context, _) {
           return Column(
             children: [
-              // ТАЙМЕР ПО ЦЕНТРУ
               Text(
                 controller.getFormattedTime(),
                 style: const TextStyle(
@@ -303,18 +297,14 @@ class _TimerPanel extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // ТРИ КНОПКИ В РЯД
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 1. СКИНУТИ ЧАС (Ліворуч)
                   _buildSideButton(
                     icon: Icons.refresh,
                     onTap: controller.reset,
                   ),
                   const SizedBox(width: 24),
-
-                  // 2. СТАРТ / ПАУЗА (По центру)
                   InkWell(
                     onTap: controller.toggle,
                     borderRadius: BorderRadius.circular(50),
@@ -341,12 +331,10 @@ class _TimerPanel extends StatelessWidget {
                   ),
                   const SizedBox(width: 24),
 
-                  // 3. РЕДАГУВАТИ ЧАС (Праворуч)
                   _buildSideButton(
                     icon: Icons.edit_outlined,
                     onTap: () async {
-                      controller
-                          .pause(); // Таймер автоматично стає на паузу при відкритті вікна
+                      controller.pause();
 
                       final newMilliseconds = await showDialog<int>(
                         context: context,
@@ -356,9 +344,7 @@ class _TimerPanel extends StatelessWidget {
                       );
 
                       if (newMilliseconds != null) {
-                        controller.setTime(
-                          newMilliseconds,
-                        ); // Одразу оновить UI
+                        controller.setTime(newMilliseconds);
                       }
                     },
                   ),
@@ -371,7 +357,6 @@ class _TimerPanel extends StatelessWidget {
     );
   }
 
-  // Допоміжний віджет для однакових бокових кнопок
   Widget _buildSideButton({
     required IconData icon,
     required VoidCallback onTap,
