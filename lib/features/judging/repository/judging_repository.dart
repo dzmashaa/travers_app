@@ -28,4 +28,13 @@ class JudgingRepository {
       throw 'Помилка збереження результату: $e';
     }
   }
+
+  Future<void> updateResult(String competitionId, ResultModel result) async {
+    await _firestore
+        .collection('competitions')
+        .doc(competitionId)
+        .collection('results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
 }
