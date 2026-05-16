@@ -5,6 +5,7 @@ import 'package:travers_app/core/models/distance.dart';
 import 'package:travers_app/core/models/judging_target.dart';
 import 'package:travers_app/core/models/participant.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/core/widgets/app_search_field.dart';
 import 'package:travers_app/features/judging/providers/judge_provider.dart';
 import 'package:travers_app/features/judging/providers/participants_provider.dart';
 import 'package:travers_app/features/judging/screens/active_judging.dart';
@@ -118,8 +119,8 @@ class _ParticipantSearchScreenState
       body: Column(
         children: [
           const SizedBox(height: 16),
-          _SearchBar(
-            isTeam: isTeam,
+          AppSearchField(
+            hintText: isTeam ? 'Назва команди...' : 'Номер або прізвище...',
             onChanged: (value) => setState(() => _searchQuery = value),
           ),
           const SizedBox(height: 20),
@@ -203,39 +204,6 @@ class _ParticipantSearchScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SearchBar extends StatelessWidget {
-  final bool isTeam;
-  final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.isTeam, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: TextField(
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: isTeam ? 'Назва команди...' : 'Номер або прізвище...',
-          prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: theme.primaryColor),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: theme.primaryColor, width: 2),
-          ),
-        ),
       ),
     );
   }

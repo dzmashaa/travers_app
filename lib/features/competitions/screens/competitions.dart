@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/widgets/app_search_field.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/competitions/providers/comp_filter_provider.dart';
@@ -85,6 +86,13 @@ class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FilterBar(),
+            const SizedBox(height: 12),
+            AppSearchField(
+              hintText: 'Пошук за назвою чи локацією...',
+              onChanged: (value) {
+                ref.read(competitionSearchQueryProvider.notifier).state = value;
+              },
+            ),
             const SizedBox(height: 12),
             CompetitionsList(
               competitionsAsync: ref.watch(filteredCompetitionsProvider),
