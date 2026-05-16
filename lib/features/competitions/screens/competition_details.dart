@@ -181,33 +181,34 @@ class CompetitionDetailsScreen extends ConsumerWidget {
               },
             ),
           const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.group_add_outlined),
-            tooltip: 'Згенерувати учасників',
-            onPressed: () async {
-              try {
-                await ref
-                    .read(competitionRepositoryProvider)
-                    .generateMockParticipants(competitionId);
+          if (canEdit)
+            IconButton(
+              icon: const Icon(Icons.group_add_outlined),
+              tooltip: 'Згенерувати учасників',
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(competitionRepositoryProvider)
+                      .generateMockParticipants(competitionId);
 
-                if (context.mounted) {
-                  SnackbarUtils.show(
-                    context,
-                    '10 тестових учасників успішно додано!',
-                    isError: false,
-                  );
+                  if (context.mounted) {
+                    SnackbarUtils.show(
+                      context,
+                      '10 тестових учасників успішно додано!',
+                      isError: false,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    SnackbarUtils.show(
+                      context,
+                      ErrorMapper.getHumanReadableMessage(e),
+                      isError: true,
+                    );
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  SnackbarUtils.show(
-                    context,
-                    ErrorMapper.getHumanReadableMessage(e),
-                    isError: true,
-                  );
-                }
-              }
-            },
-          ),
+              },
+            ),
           const SizedBox(width: 8),
         ],
       ),

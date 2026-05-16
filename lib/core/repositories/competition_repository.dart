@@ -45,7 +45,7 @@ class CompetitionRepository {
   Stream<List<CompetitionModel>> watchAllCompetitions() {
     return _db
         .collection(AppConstants.competitionsCollection)
-        .orderBy('startDate')
+        .orderBy('startDate', descending: true)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
