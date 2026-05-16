@@ -7,6 +7,9 @@ class AggregatedResult {
   final int totalPenalties;
   final int finalCalculatedTimeMs;
   final List<ResultModel> blockResults;
+  final List<AggregatedResult>? teamMemberResults;
+  final Set<String>? scoringTargetIds;
+  final double? relativePercentage;
 
   AggregatedResult({
     required this.target,
@@ -14,6 +17,9 @@ class AggregatedResult {
     required this.totalPenalties,
     required this.finalCalculatedTimeMs,
     required this.blockResults,
+    this.teamMemberResults,
+    this.scoringTargetIds,
+    this.relativePercentage,
   });
 
   AggregatedResult copyWith({
@@ -21,6 +27,7 @@ class AggregatedResult {
     int? totalPenalties,
     int? finalCalculatedTimeMs,
     List<ResultModel>? blockResults,
+    double? relativePercentage,
   }) {
     return AggregatedResult(
       target: target,
@@ -29,6 +36,9 @@ class AggregatedResult {
       finalCalculatedTimeMs:
           finalCalculatedTimeMs ?? this.finalCalculatedTimeMs,
       blockResults: blockResults ?? this.blockResults,
+      teamMemberResults: teamMemberResults,
+      scoringTargetIds: scoringTargetIds,
+      relativePercentage: relativePercentage ?? this.relativePercentage,
     );
   }
 

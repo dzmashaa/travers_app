@@ -218,6 +218,7 @@ List<AggregatedResult> _calculateDistanceTeamResults(
     if (teamResults.length < topCountRequired) continue;
 
     final topResults = teamResults.take(topCountRequired).toList();
+    final scoringTargetIds = topResults.map((r) => r.target.id).toSet();
     int teamTotalTimeMs = 0;
     int teamTotalPenalties = 0;
     final regions = <String>{};
@@ -240,6 +241,8 @@ List<AggregatedResult> _calculateDistanceTeamResults(
         totalPenalties: teamTotalPenalties,
         finalCalculatedTimeMs: teamTotalTimeMs,
         blockResults: [],
+        teamMemberResults: teamResults,
+        scoringTargetIds: scoringTargetIds,
       ),
     );
   }
@@ -307,15 +310,37 @@ final leaderboardProvider =
       leaderboard.sort(
         (a, b) => a.finalCalculatedTimeMs.compareTo(b.finalCalculatedTimeMs),
       );
+      if (leaderboard.isNotEmpty) {
+        final bestTime = leaderboard.first.finalCalculatedTimeMs;
+
+        if (bestTime > 0) {
+          leaderboard = leaderboard.map((res) {
+            final percentage = (res.finalCalculatedTimeMs / bestTime) * 100;
+
+            return res.copyWith(relativePercentage: percentage);
+          }).toList();
+        }
+      }
 
       return AsyncValue.data(leaderboard);
     });
 
+class DistanceScore {
+  final String distanceName;
+  final double percentage;
+  final int timeMs;
+
+  DistanceScore(this.distanceName, this.percentage, this.timeMs);
+
+  String get formattedPercentage => '${percentage.toStringAsFixed(1)} %';
+}
+
 class TeamStanding {
   final String teamName;
   final double totalPercentage;
+  final List<DistanceScore> distanceScores;
 
-  TeamStanding(this.teamName, this.totalPercentage);
+  TeamStanding(this.teamName, this.totalPercentage, this.distanceScores);
 
   String get formattedPercentage => '${totalPercentage.toStringAsFixed(1)} %';
 }
@@ -343,6 +368,7 @@ final overallStandingsProvider =
       }
 
       final teamScores = <String, double>{};
+      final teamBreakdowns = <String, List<DistanceScore>>{};
 
       for (final distance in comp.distances) {
         final baseResults = _calculateBaseResults(
@@ -386,11 +412,25 @@ final overallStandingsProvider =
           final teamName = res.target.title;
 
           teamScores[teamName] = (teamScores[teamName] ?? 0.0) + percentage;
+          teamBreakdowns
+              .putIfAbsent(teamName, () => [])
+              .add(
+                DistanceScore(
+                  distance.type.displayName,
+                  percentage,
+                  res.finalCalculatedTimeMs,
+                ),
+              );
         }
       }
 
       final resultList =
-          teamScores.entries.map((e) => TeamStanding(e.key, e.value)).toList()
+          teamScores.entries
+              .map(
+                (e) =>
+                    TeamStanding(e.key, e.value, teamBreakdowns[e.key] ?? []),
+              )
+              .toList()
             ..sort((a, b) => a.totalPercentage.compareTo(b.totalPercentage));
 
       return AsyncValue.data(resultList);

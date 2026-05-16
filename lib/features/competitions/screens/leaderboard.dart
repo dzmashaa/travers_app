@@ -5,10 +5,13 @@ import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/distance.dart';
 import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/core/widgets/app_filter_chip.dart';
+import 'package:travers_app/core/widgets/app_search_field.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/features/competitions/providers/leaderboard_provider.dart';
 import 'package:travers_app/features/competitions/widgets/comp_status.dart';
+import 'package:travers_app/features/competitions/widgets/overall_team_details.dart';
 import 'package:travers_app/features/competitions/widgets/participant_details_bottomsheet.dart';
+import 'package:travers_app/features/competitions/widgets/team_distance_details.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   final String competitionId;
@@ -136,22 +139,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               if (!_isOverallStandings && _selectedDistance != null)
                 _buildSubFilters(_selectedDistance!),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextField(
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  decoration: InputDecoration(
-                    hintText: 'Пошук учасника...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
+              AppSearchField(
+                hintText: 'Пошук учасника...',
+                onChanged: (value) => setState(() => _searchQuery = value),
               ),
 
               const SizedBox(height: 16),
@@ -368,28 +358,40 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               finalTime: result.formattedFinalTime,
               penalties: '${result.totalPenalties} б.',
               onTap: () {
-                final currentUserId = ref.read(currentUserUidProvider);
-                final isHeadJudge =
-                    currentUserId != null &&
-                    currentUserId == competition.headJudgeId;
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => DraggableScrollableSheet(
-                    initialChildSize: 0.6,
-                    minChildSize: 0.4,
-                    maxChildSize: 0.9,
-                    builder: (_, scrollController) {
-                      return ParticipantDetailsBottomSheet(
-                        competitionId: widget.competitionId,
-                        result: result,
-                        distance: distance,
-                        isHeadJudge: isHeadJudge,
-                      );
-                    },
-                  ),
-                );
+                if (_isTeamView) {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) =>
+                        TeamDistanceDetailsBottomSheet(teamResult: result),
+                  );
+                } else {
+                  final currentUserId = ref.read(currentUserUidProvider);
+                  final isHeadJudge =
+                      currentUserId != null &&
+                      currentUserId == competition.headJudgeId;
+
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    enableDrag: false,
+                    builder: (context) => DraggableScrollableSheet(
+                      initialChildSize: 0.6,
+                      minChildSize: 0.4,
+                      maxChildSize: 0.9,
+                      builder: (_, scrollController) {
+                        return ParticipantDetailsBottomSheet(
+                          competitionId: widget.competitionId,
+                          result: result,
+                          distance: distance,
+                          isHeadJudge: isHeadJudge,
+                        );
+                      },
+                    ),
+                  );
+                }
               },
             );
           },
@@ -439,7 +441,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               finalTime: team.formattedPercentage,
               penalties: '',
               startNumber: '',
-              onTap: () {},
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) =>
+                      OverallTeamDetailsBottomSheet(standing: team),
+                );
+              },
             );
           },
         );
