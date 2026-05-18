@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class BaseAppCard extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget child;
   final EdgeInsetsGeometry? margin;
   final BoxBorder? border;
   const BaseAppCard({
     super.key,
-    required this.onTap,
+    this.onTap,
     required this.child,
     this.margin,
     this.border,
