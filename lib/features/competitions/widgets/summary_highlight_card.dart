@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class SummaryHighlightCard extends StatelessWidget {
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Color borderColor;
   final Widget child;
 
   const SummaryHighlightCard({
     super.key,
-    required this.backgroundColor,
+    this.backgroundColor = Colors.white,
     required this.borderColor,
     required this.child,
   });

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travers_app/core/utils/base_bottom_sheet.dart';
+import 'package:travers_app/core/widgets/base_bottom_sheet.dart';
 
 class AssignJudgesBottomSheet extends StatefulWidget {
   final Map<String, String> allCompetitionJudges;
@@ -39,6 +39,7 @@ class _AssignJudgesBottomSheetState extends State<AssignJudgesBottomSheet> {
         text: 'Зберегти',
         onPressed: () => Navigator.pop(context, _selectedIds),
       ),
+      backgroundColor: Colors.white,
       child: Column(
         children: [
           TextField(
