@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/result.dart';
+import 'package:travers_app/core/utils/time_extension.dart';
 
 class StageResultCard extends StatelessWidget {
   final String blockName;
@@ -12,13 +13,6 @@ class StageResultCard extends StatelessWidget {
     required this.index,
     required this.result,
   });
-
-  String _formatTime(int milliseconds) {
-    final int seconds = (milliseconds / 1000).truncate();
-    final int minutes = (seconds / 60).truncate();
-    final int remainingSeconds = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +54,9 @@ class StageResultCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _formatTime(result.timeTotalMs),
+                    result.timeTotalMs.toFormattedTime(
+                      includeHundredths: false,
+                    ),
                     style: const TextStyle(
                       fontFamily: 'Courier',
                       fontWeight: FontWeight.bold,

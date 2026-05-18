@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:travers_app/core/utils/time_extension.dart';
 
 class ManualTimeEditDialog extends StatefulWidget {
   final int initialMilliseconds;
@@ -18,18 +19,10 @@ class _ManualTimeEditDialogState extends State<ManualTimeEditDialog> {
   @override
   void initState() {
     super.initState();
-    final ms = widget.initialMilliseconds < 0 ? 0 : widget.initialMilliseconds;
-    final min = ms ~/ 60000;
-    final sec = (ms % 60000) ~/ 1000;
-    final hd = (ms % 1000) ~/ 10;
-
-    _minController = TextEditingController(
-      text: min.toString().padLeft(2, '0'),
-    );
-    _secController = TextEditingController(
-      text: sec.toString().padLeft(2, '0'),
-    );
-    _hdController = TextEditingController(text: hd.toString().padLeft(2, '0'));
+    final timeParts = widget.initialMilliseconds.toTimeParts();
+    _minController = TextEditingController(text: timeParts.min);
+    _secController = TextEditingController(text: timeParts.sec);
+    _hdController = TextEditingController(text: timeParts.hd);
   }
 
   @override

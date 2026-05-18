@@ -286,7 +286,7 @@ class _TimerPanel extends StatelessWidget {
           return Column(
             children: [
               Text(
-                controller.getFormattedTime(),
+                controller.formattedTime,
                 style: const TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,

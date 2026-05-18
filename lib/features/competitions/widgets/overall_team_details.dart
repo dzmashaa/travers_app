@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:travers_app/core/utils/time_extension.dart';
 import 'package:travers_app/features/competitions/providers/leaderboard_provider.dart';
 
 class OverallTeamDetailsBottomSheet extends StatelessWidget {
   final TeamStanding standing;
 
   const OverallTeamDetailsBottomSheet({super.key, required this.standing});
-
-  String _formatTime(int milliseconds) {
-    final int seconds = (milliseconds / 1000).truncate();
-    final int minutes = (seconds / 60).truncate();
-    final int remainingSeconds = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +130,7 @@ class OverallTeamDetailsBottomSheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Час: ${_formatTime(ds.timeMs)}',
+                            'Час: ${ds.timeMs.toFormattedTime(includeHundredths: false)}',
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 13,

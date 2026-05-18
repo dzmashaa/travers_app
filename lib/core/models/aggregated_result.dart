@@ -1,5 +1,6 @@
 import 'package:travers_app/core/models/judging_target.dart';
 import 'package:travers_app/core/models/result.dart';
+import 'package:travers_app/core/utils/time_extension.dart';
 
 class AggregatedResult {
   final JudgingTarget target;
@@ -42,23 +43,6 @@ class AggregatedResult {
     );
   }
 
-  String get formattedFinalTime {
-    final min = (finalCalculatedTimeMs ~/ 60000).toString().padLeft(2, '0');
-    final sec = ((finalCalculatedTimeMs % 60000) ~/ 1000).toString().padLeft(
-      2,
-      '0',
-    );
-    final hd = ((finalCalculatedTimeMs % 1000) ~/ 10).toString().padLeft(
-      2,
-      '0',
-    );
-    return '$min:$sec.$hd';
-  }
-
-  String get formattedPureTime {
-    final min = (pureTimeMs ~/ 60000).toString().padLeft(2, '0');
-    final sec = ((pureTimeMs % 60000) ~/ 1000).toString().padLeft(2, '0');
-    final hd = ((pureTimeMs % 1000) ~/ 10).toString().padLeft(2, '0');
-    return '$min:$sec.$hd';
-  }
+  String get formattedFinalTime => finalCalculatedTimeMs.toFormattedTime();
+  String get formattedPureTime => pureTimeMs.toFormattedTime();
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:travers_app/core/utils/time_extension.dart';
 
 class JudgingTimerController extends ChangeNotifier {
   final Stopwatch _stopwatch = Stopwatch();
@@ -51,15 +52,7 @@ class JudgingTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String getFormattedTime() {
-    final ms = elapsedMilliseconds;
-    if (ms <= 0) return '00:00.00';
-
-    final min = (ms ~/ 60000).toString().padLeft(2, '0');
-    final sec = ((ms % 60000) ~/ 1000).toString().padLeft(2, '0');
-    final hd = ((ms % 1000) ~/ 10).toString().padLeft(2, '0');
-    return '$min:$sec.$hd';
-  }
+  String get formattedTime => elapsedMilliseconds.toFormattedTime();
 
   @override
   void dispose() {
