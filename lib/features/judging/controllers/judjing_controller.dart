@@ -31,7 +31,7 @@ class JudgingController extends AsyncNotifier<void> {
       if (competition.judgeIds.contains(uid)) {
         throw AppException('Ви вже приєднані до цього змагання.');
       }
-      await repo.addCompetitionJudge(competition.id, uid);
+      repo.addCompetitionJudge(competition.id, uid);
     });
 
     return !state.hasError;

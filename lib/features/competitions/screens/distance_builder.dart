@@ -4,13 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/stage_block.dart';
 import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/utils/network_helper.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/repositories/competition_repository.dart';
-import 'package:travers_app/features/competitions/controllers/distance_builder_controller.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
-import 'package:travers_app/core/utils/error_mapper.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
 import 'package:travers_app/features/competitions/widgets/assign_judges.dart';
 import 'package:travers_app/features/competitions/widgets/distance_info_card.dart';
@@ -53,16 +52,19 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
     );
 
     if (blockName == null || !mounted) return;
-    final success = await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .addBlock(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockName: blockName,
-        );
 
-    if (success && mounted) {
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .addBlock(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockName: blockName,
+          );
+
       SnackbarUtils.show(context, 'Блок успішно додано', isError: false);
+    } catch (e) {
+      SnackbarUtils.show(context, 'Помилка: $e', isError: true);
     }
   }
 
@@ -70,18 +72,20 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
     final result = await DialogHelpers.showAddStageDialog(context);
     if (result == null || !mounted) return;
 
-    final success = await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .addStage(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockId: block.id,
-          stageName: result['name'],
-          passingMode: result['mode'],
-        );
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .addStage(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockId: block.id,
+            stageName: result['name'],
+            passingMode: result['mode'],
+          );
 
-    if (success && mounted) {
       SnackbarUtils.show(context, 'Етап додано', isError: false);
+    } catch (e) {
+      SnackbarUtils.show(context, 'Помилка: $e', isError: true);
     }
   }
 
@@ -94,34 +98,61 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
 
     if (!confirm || !mounted) return;
 
-    final success = await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .deleteBlock(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockId: block.id,
-        );
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .deleteBlock(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockId: block.id,
+          );
 
-    if (success && mounted) {
       SnackbarUtils.show(context, 'Блок видалено', isError: false);
+    } catch (e) {
+      SnackbarUtils.show(context, 'Помилка: $e', isError: true);
     }
   }
 
-  Future<void> _deleteStage(String blockId, String stageId) async {
-    await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .deleteStage(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockId: blockId,
-          stageId: stageId,
-        );
+  Future<void> _deleteStage(StageBlock block, String stageId) async {
+    final stageName = block.stages.firstWhere((s) => s.id == stageId).name;
+    final confirm = await DialogHelpers.showConfirmDialog(
+      context,
+      title: 'Видалити етап?',
+      content: 'Це видалить етап "$stageName".',
+    );
+
+    if (!confirm || !mounted) return;
+
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .deleteStage(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockId: block.id,
+            stageId: stageId,
+          );
+
+      SnackbarUtils.show(context, 'Етап видалено', isError: false);
+    } catch (e) {
+      SnackbarUtils.show(context, 'Помилка: $e', isError: true);
+    }
   }
 
   Future<void> _assignJudges(
     StageBlock block,
     Map<String, String> judgesMap,
   ) async {
+    final hasConnection = await NetworkHelper.hasInternet();
+    if (!hasConnection && context.mounted) {
+      SnackbarUtils.show(
+        context,
+        'Для розподілу суддів потрібен Інтернет, щоб синхронізувати списки.',
+        isError: true,
+      );
+      return;
+    }
+
     final result = await showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
@@ -131,29 +162,43 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
         initialSelectedIds: block.judgeIds,
       ),
     );
-    if (result == null || !mounted) return;
-    await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .updateBlockJudges(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockId: block.id,
-          judgeIds: result,
-        );
+
+    if (result == null || !context.mounted) return;
+
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .updateBlockJudges(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockId: block.id,
+            newJudgeIds: result,
+          );
+    } catch (e) {
+      SnackbarUtils.show(
+        context,
+        'Помилка призначення суддів: $e',
+        isError: true,
+      );
+    }
   }
 
-  Future<void> _deleteJudge(StageBlock block, String judgeId) async {
+  void _deleteJudge(StageBlock block, String judgeId) {
     final currentJudges = List<String>.from(block.judgeIds);
-
     currentJudges.remove(judgeId);
-    await ref
-        .read(distanceBuilderControllerProvider.notifier)
-        .updateBlockJudges(
-          competitionId: widget.competitionId,
-          distanceId: widget.distanceId,
-          blockId: block.id,
-          judgeIds: currentJudges,
-        );
+
+    try {
+      ref
+          .read(competitionRepositoryProvider)
+          .updateBlockJudges(
+            competitionId: widget.competitionId,
+            distanceId: widget.distanceId,
+            blockId: block.id,
+            newJudgeIds: currentJudges,
+          );
+    } catch (e) {
+      SnackbarUtils.show(context, 'Помилка видалення судді: $e', isError: true);
+    }
   }
 
   @override
@@ -173,15 +218,6 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
       competitionJudgesMapProvider(competition?.judgeIds ?? []),
     );
     final judgesMap = judgesMapAsync.value ?? {};
-    ref.listen(distanceBuilderControllerProvider, (previous, next) {
-      if (next.hasError && !next.isLoading) {
-        SnackbarUtils.show(
-          context,
-          ErrorMapper.getHumanReadableMessage(next.error!),
-          isError: true,
-        );
-      }
-    });
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -268,7 +304,7 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
                         onAssignJudge: () => _assignJudges(block, judgesMap),
                         onDeleteBlock: () => _deleteBlock(block),
                         onDeleteStage: (stageId) =>
-                            _deleteStage(block.id, stageId),
+                            _deleteStage(block, stageId),
                         onDeleteJudge: (judgeId) =>
                             _deleteJudge(block, judgeId),
                       ),

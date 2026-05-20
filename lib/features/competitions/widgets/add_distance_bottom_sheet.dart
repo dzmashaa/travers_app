@@ -29,7 +29,6 @@ class _AddDistanceBottomSheetState
   DistanceType _type = DistanceType.obstacleCourse;
   DistanceView _view = DistanceView.individual;
   int _classLevel = 1;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -42,14 +41,13 @@ class _AddDistanceBottomSheetState
     }
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    setState(() => _isLoading = true);
-
     try {
       final repository = ref.read(competitionRepositoryProvider);
+
       if (widget.initialDistance != null) {
         final updatedDistance = widget.initialDistance!.copyWith(
           type: _type,
@@ -58,30 +56,26 @@ class _AddDistanceBottomSheetState
           description: _description,
         );
 
-        await repository.updateDistance(
+        repository.updateDistance(
           competitionId: widget.competitionId,
           updatedDistance: updatedDistance,
         );
       } else {
-        await ref
-            .read(competitionRepositoryProvider)
-            .addDistance(
-              competitionId: widget.competitionId,
-              description: _description,
-              type: _type,
-              view: _view,
-              classLevel: _classLevel,
-            );
+        repository.addDistance(
+          competitionId: widget.competitionId,
+          description: _description,
+          type: _type,
+          view: _view,
+          classLevel: _classLevel,
+        );
       }
-
-      if (mounted) Navigator.pop(context);
+      Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        final message = ErrorMapper.getHumanReadableMessage(e);
-        SnackbarUtils.show(context, message, isError: true);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      SnackbarUtils.show(
+        context,
+        ErrorMapper.getHumanReadableMessage(e),
+        isError: true,
+      );
     }
   }
 
@@ -94,7 +88,6 @@ class _AddDistanceBottomSheetState
       title: isEditing ? 'Змінити дистанцію' : 'Додати дистанцію',
       bottomButton: PrimarySubmitButton(
         text: isEditing ? 'Зберегти' : 'Додати дистанцію',
-        isLoading: _isLoading,
         onPressed: _submit,
       ),
       child: Form(

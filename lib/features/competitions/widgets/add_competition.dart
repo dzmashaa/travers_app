@@ -25,7 +25,6 @@ class _AddCompetitionBottomSheetState
   late String _location;
   DateTime? _startDate;
   DateTime? _endDate;
-  bool _isLoading = false;
 
   String? _dateError;
 
@@ -83,21 +82,18 @@ class _AddCompetitionBottomSheetState
     }
   }
 
-  Future<void> _saveCompetition() async {
+  void _saveCompetition() {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
     if (_startDate == null || _endDate == null) {
-      setState(() {
-        _dateError = 'Оберіть дати проведення змагання';
-      });
+      setState(() => _dateError = 'Оберіть дати проведення змагання');
       return;
     }
 
-    setState(() => _isLoading = true);
-
     try {
-      final savedCompetition = await ref
+      final isNew = widget.competition == null;
+      final savedCompetition = ref
           .read(competitionRepositoryProvider)
           .saveCompetition(
             existingCompetition: widget.competition,
@@ -107,33 +103,25 @@ class _AddCompetitionBottomSheetState
             endDate: _endDate!,
           );
 
-      if (mounted) {
-        if (widget.competition != null) {
-          Navigator.pop(context);
-        } else {
-          if (widget.competition == null) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CompetitionDetailsScreen(
-                  competitionId: savedCompetition.id,
-                  initialCompetition: savedCompetition,
-                ),
-              ),
-            );
-          }
-        }
+      if (isNew) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CompetitionDetailsScreen(
+              competitionId: savedCompetition.id,
+              initialCompetition: savedCompetition,
+            ),
+          ),
+        );
+      } else {
+        Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
-        SnackbarUtils.show(
-          context,
-          ErrorMapper.getHumanReadableMessage(e),
-          isError: true,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      SnackbarUtils.show(
+        context,
+        ErrorMapper.getHumanReadableMessage(e),
+        isError: true,
+      );
     }
   }
 
@@ -146,7 +134,6 @@ class _AddCompetitionBottomSheetState
       title: isEditing ? 'Редагувати змагання' : 'Нове змагання',
       bottomButton: PrimarySubmitButton(
         text: isEditing ? 'Зберегти' : 'Додати',
-        isLoading: _isLoading,
         onPressed: _saveCompetition,
       ),
       child: Form(

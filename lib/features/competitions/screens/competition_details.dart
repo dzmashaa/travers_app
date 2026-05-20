@@ -62,7 +62,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
       );
     }
     try {
-      await ref
+      ref
           .read(competitionRepositoryProvider)
           .deleteDistanceWithResults(
             competitionId: competitionId,
@@ -104,9 +104,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
     SnackbarUtils.showLoading(context, 'Видалення всіх даних змагання...');
 
     try {
-      await ref
-          .read(competitionRepositoryProvider)
-          .deleteCompetition(competitionId);
+      ref.read(competitionRepositoryProvider).deleteCompetition(competitionId);
 
       ref.invalidate(allCompetitionsStreamProvider);
 
@@ -187,7 +185,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
               tooltip: 'Згенерувати учасників',
               onPressed: () async {
                 try {
-                  await ref
+                  ref
                       .read(competitionRepositoryProvider)
                       .generateMockParticipants(competitionId);
 
