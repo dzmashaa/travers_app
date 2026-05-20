@@ -27,9 +27,7 @@ class CompInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodyLarge?.copyWith(
-      fontSize: 16,
-    ); // Спільний стиль тексту
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: 16);
 
     return BaseInfoContainer(
       child: Stack(
@@ -41,7 +39,7 @@ class CompInfoCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CompStatusBadge(status: competition.status, fontSize: 14.0),
-                  _buildCopyCodeButton(theme, context),
+                  if (canEdit) _buildCopyCodeButton(theme, context),
                 ],
               ),
               const SizedBox(height: 20),
