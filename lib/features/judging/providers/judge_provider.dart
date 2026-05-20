@@ -19,9 +19,13 @@ final judgeCompetitionsProvider =
           .where('judgeIds', arrayContains: currentUserUid)
           .snapshots()
           .map((snapshot) {
-            return snapshot.docs
+            final list = snapshot.docs
                 .map((doc) => CompetitionModel.fromMap(doc.data(), doc.id))
                 .toList();
+            list.sort((a, b) {
+              return b.startDate.compareTo(a.startDate);
+            });
+            return list;
           });
     });
 
