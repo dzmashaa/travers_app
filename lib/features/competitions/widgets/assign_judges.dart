@@ -42,6 +42,32 @@ class _AssignJudgesBottomSheetState extends State<AssignJudgesBottomSheet> {
       backgroundColor: Colors.white,
       child: Column(
         children: [
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Увага: додавання суддів до списку та їх розподіл вимагає підключення до Інтернету. Усі зміни будуть миттєво синхронізовані з пристроями інших суддів.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(

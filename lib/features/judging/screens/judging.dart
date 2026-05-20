@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
 import 'package:travers_app/core/utils/error_mapper.dart';
+import 'package:travers_app/core/utils/network_helper.dart' show NetworkHelper;
 import 'package:travers_app/core/utils/snackbar_utils.dart';
 import 'package:travers_app/core/widgets/comp_list.dart';
 import 'package:travers_app/features/competitions/widgets/filter_bar.dart';
@@ -64,6 +65,15 @@ class JudgingScreen extends ConsumerWidget {
         onPressed: isLoading
             ? null
             : () async {
+                final hasConnection = await NetworkHelper.hasInternet();
+                if (!hasConnection && context.mounted) {
+                  SnackbarUtils.show(
+                    context,
+                    'Для приєднання до змагання необхідне підключення до Інтернету.',
+                    isError: true,
+                  );
+                  return;
+                }
                 final code = await DialogHelpers.showAccessCodeDialog(
                   context,
                   title: 'Приєднатися до змагання',
