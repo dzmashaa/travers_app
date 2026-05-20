@@ -27,7 +27,7 @@ class BlockResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final allPenalties = result.appliedPenalties ?? [];
+    final allPenalties = result.appliedPenalties;
     final hasError = result.penaltiesSum > 0;
 
     return BaseAppCard(

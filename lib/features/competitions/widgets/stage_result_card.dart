@@ -16,7 +16,7 @@ class StageResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final penalties = result.appliedPenalties ?? [];
+    final penalties = result.appliedPenalties;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

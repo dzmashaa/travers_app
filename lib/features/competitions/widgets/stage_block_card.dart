@@ -198,7 +198,7 @@ class StageBlockCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          if (block.judgeIds != null && block.judgeIds!.isNotEmpty)
+          if (block.judgeIds.isNotEmpty)
             Wrap(
               spacing: 8,
               runSpacing: 8,
