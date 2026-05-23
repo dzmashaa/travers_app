@@ -256,6 +256,7 @@ class _ParticipantList extends StatelessWidget {
           participant: participant,
           isSelectableMode: isPairMode,
           isSelected: isSelected,
+          isJudgingMode: true,
           onTap: () {
             if (!isPairMode) {
               onParticipantTap(participant);

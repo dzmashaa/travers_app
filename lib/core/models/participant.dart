@@ -8,6 +8,7 @@ class ParticipantModel {
   final String coachName;
   final Gender gender;
   final String region;
+  final int birthYear;
 
   ParticipantModel({
     required this.id,
@@ -17,6 +18,7 @@ class ParticipantModel {
     required this.coachName,
     required this.gender,
     required this.region,
+    required this.birthYear,
   });
 
   factory ParticipantModel.fromMap(
@@ -35,6 +37,7 @@ class ParticipantModel {
       coachName: map['coachName'] ?? '',
       gender: parsedGender,
       region: map['region'] ?? '',
+      birthYear: map['birthYear'] ?? DateTime.now().year,
     );
   }
 
@@ -46,6 +49,29 @@ class ParticipantModel {
       'coachName': coachName,
       'gender': gender.name,
       'region': region.trim(),
+      'birthYear': birthYear,
     };
+  }
+
+  ParticipantModel copyWith({
+    String? id,
+    int? startNumber,
+    String? name,
+    String? teamName,
+    String? coachName,
+    Gender? gender,
+    String? region,
+    int? birthYear,
+  }) {
+    return ParticipantModel(
+      id: id ?? this.id,
+      startNumber: startNumber ?? this.startNumber,
+      name: name ?? this.name,
+      teamName: teamName ?? this.teamName,
+      coachName: coachName ?? this.coachName,
+      gender: gender ?? this.gender,
+      region: region ?? this.region,
+      birthYear: birthYear ?? this.birthYear,
+    );
   }
 }

@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/competition.dart';
 import 'package:travers_app/core/models/distance.dart';
 import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/repositories/participant_repository.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/repositories/competition_repository.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/competitions/screens/leaderboard.dart';
+import 'package:travers_app/features/competitions/screens/participants_list_screen.dart';
 import 'package:travers_app/features/competitions/widgets/add_competition.dart';
 import 'package:travers_app/features/competitions/widgets/add_distance_bottom_sheet.dart';
 import 'package:travers_app/features/competitions/screens/distance_builder.dart';
@@ -145,6 +147,11 @@ class CompetitionDetailsScreen extends ConsumerWidget {
     final isHeadJudge = role == UserRole.headJudge;
     final canEdit = isHeadJudge && isCreator;
 
+    final participantsCountAsync = ref.watch(
+      participantsCountProvider(competitionId),
+    );
+    final currentParticipantsCount = participantsCountAsync.value ?? 0;
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -179,35 +186,6 @@ class CompetitionDetailsScreen extends ConsumerWidget {
               },
             ),
           const SizedBox(width: 8),
-          if (canEdit)
-            IconButton(
-              icon: const Icon(Icons.group_add_outlined),
-              tooltip: 'Згенерувати учасників',
-              onPressed: () async {
-                try {
-                  ref
-                      .read(competitionRepositoryProvider)
-                      .generateMockParticipants(competitionId);
-
-                  if (context.mounted) {
-                    SnackbarUtils.show(
-                      context,
-                      '10 тестових учасників успішно додано!',
-                      isError: false,
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    SnackbarUtils.show(
-                      context,
-                      ErrorMapper.getHumanReadableMessage(e),
-                      isError: true,
-                    );
-                  }
-                }
-              },
-            ),
-          const SizedBox(width: 8),
         ],
       ),
       body: competitionAsyncValue.when(
@@ -234,7 +212,11 @@ class CompetitionDetailsScreen extends ConsumerWidget {
                         onDelete: () => _handleDeleteCompetition(context, ref),
                       ),
                       const SizedBox(height: 16),
-                      _StatsRow(competition: competition),
+                      _StatsRow(
+                        competition: competition,
+                        participantsCount: currentParticipantsCount,
+                        canEdit: canEdit,
+                      ),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -357,13 +339,18 @@ class CompetitionDetailsScreen extends ConsumerWidget {
 
 class _StatsRow extends StatelessWidget {
   final CompetitionModel competition;
+  final int participantsCount;
+  final bool canEdit;
 
-  const _StatsRow({required this.competition});
+  const _StatsRow({
+    required this.competition,
+    required this.participantsCount,
+    required this.canEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final participantsCount = competition.participantIds.length;
 
     return Row(
       children: [
@@ -375,11 +362,26 @@ class _StatsRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
+
         Expanded(
-          child: StatCard(
-            number: participantsCount.toString(),
-            label: 'Учасників',
-            numberColor: theme.colorScheme.secondary,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ParticipantsListScreen(
+                    competitionId: competition.id,
+                    canEdit: canEdit,
+                  ),
+                ),
+              );
+            },
+            child: StatCard(
+              number: participantsCount.toString(),
+              label: 'Учасників',
+              numberColor: theme.colorScheme.secondary,
+              actionIcon: Icons.open_in_new_rounded,
+            ),
           ),
         ),
       ],
