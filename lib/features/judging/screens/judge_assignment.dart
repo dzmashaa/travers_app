@@ -93,6 +93,7 @@ class JudgeAssignmentsScreen extends ConsumerWidget {
                       final assignment = assignments[index];
 
                       return JudgeAssignmentCard(
+                        competitionId: competition.id,
                         assignment: assignment,
                         onTap: () {
                           Navigator.push(
