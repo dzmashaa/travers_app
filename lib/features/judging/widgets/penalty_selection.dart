@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/penalty_rule.dart';
+import 'package:travers_app/core/widgets/app_search_field.dart';
 import 'package:travers_app/features/judging/providers/penalties_provider.dart';
 import 'package:travers_app/features/judging/widgets/penalty_filter_bar.dart';
 import 'package:travers_app/features/judging/widgets/penalty_rule_card.dart';
@@ -61,18 +62,10 @@ class _PenaltySelectionSheetState extends ConsumerState<PenaltySelectionSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          TextField(
+          AppSearchField(
+            hintText: 'Введіть ключове слово або код',
+            margin: EdgeInsets.zero,
             onChanged: (val) => setState(() => _searchQuery = val),
-            decoration: InputDecoration(
-              hintText: 'Введіть ключове слово або код',
-              prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide.none,
-              ),
-            ),
           ),
           const SizedBox(height: 16),
 
