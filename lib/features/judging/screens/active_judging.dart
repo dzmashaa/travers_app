@@ -83,6 +83,13 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
           ),
         );
       });
+      if (rule.mustFix) {
+        SnackbarUtils.show(
+          context,
+          'Учасник зобов\'язаний виправити помилку "${rule.code}" на етапі!',
+          isError: true,
+        );
+      }
     }
   }
 
@@ -395,6 +402,7 @@ class _StageJudgingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stageTotal = penalties.fold(0, (sum, p) => sum + p.points);
+    final stageIcon = stage.passingMode.icon;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -411,10 +419,28 @@ class _StageJudgingCard extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  '$index. ${stage.name}',
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '$index. ${stage.name}'),
+
+                      if (stageIcon != null)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              stageIcon,
+                              size: 18,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -422,14 +448,20 @@ class _StageJudgingCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '$stageTotal б.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: stageTotal > 0
-                      ? const Color(0xFFD32F2F)
-                      : Colors.grey.shade600,
+
+              const SizedBox(width: 12),
+
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Text(
+                  '$stageTotal б.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: stageTotal > 0
+                        ? const Color(0xFFD32F2F)
+                        : Colors.grey.shade600,
+                  ),
                 ),
               ),
             ],
