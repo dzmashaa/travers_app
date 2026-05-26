@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travers_app/core/models/user_role.dart';
+import 'package:travers_app/core/utils/network_helper.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
 import 'package:travers_app/features/navigation/main_shell.dart';
@@ -42,6 +43,15 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final hasConnection = await NetworkHelper.hasInternet();
+    if (!hasConnection && mounted) {
+      SnackbarUtils.show(
+        context,
+        'Для входу в акаунт потрібне підключення до Інтернету.',
+        isError: true,
+      );
+      return;
+    }
     setState(() => _isLoading = true);
 
     final authService = ref.read(authServiceProvider);
