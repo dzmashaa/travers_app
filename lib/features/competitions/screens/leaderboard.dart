@@ -482,7 +482,7 @@ class _TournamentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color borderColor = Colors.transparent;
-    Color rankColor = Colors.grey.shade300;
+    Color rankColor = Colors.grey.shade500;
 
     if (place == 1) {
       borderColor = const Color(0xFFFFD700); // Золото
