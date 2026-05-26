@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/stage.dart';
+import 'package:travers_app/core/utils/app_decorations.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
+import 'package:travers_app/features/competitions/widgets/stage_autocomplete_field.dart';
 import '../widgets/confirm_action_dialog.dart';
 
 class DialogHelpers {
@@ -31,42 +33,47 @@ class DialogHelpers {
     bool barrierDismissible = true,
   }) async {
     final controller = TextEditingController();
-
+    final theme = Theme.of(context);
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: barrierDismissible,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+
         title: Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(fontSize: 20),
+          style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message, style: Theme.of(context).textTheme.bodyMedium),
+            Text(message, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 16),
+
             TextField(
               controller: controller,
               autofocus: true,
-              textCapitalization:
-                  TextCapitalization.characters, // Зручно для кодів
-              decoration: const InputDecoration(
-                hintText: 'Введіть код...',
-                border: OutlineInputBorder(),
+              textCapitalization: TextCapitalization.characters,
+              style: theme.textTheme.titleMedium,
+              decoration: AppDecorations.inputField(
+                theme: theme,
+                hint: 'Введіть код...',
+                icon: Icons.key_outlined,
               ),
             ),
           ],
         ),
+        actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, null),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
             child: Text(
               cancelText,
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(color: Colors.black54),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
@@ -83,10 +90,17 @@ class DialogHelpers {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
+              backgroundColor: theme.colorScheme.secondary,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: Text(confirmText),
+            child: Text(
+              confirmText,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -102,51 +116,56 @@ class DialogHelpers {
     String confirmText = 'Зберегти',
     String cancelText = 'Скасувати',
   }) async {
+    final theme = Theme.of(context);
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+
         title: Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.displayMedium?.copyWith(fontSize: 20),
+          style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
         ),
         content: Form(
           key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: hintText,
-              border: const OutlineInputBorder(),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                style: theme.textTheme.titleMedium,
+                decoration: AppDecorations.inputField(
+                  theme: theme,
+                  hint: hintText,
+                  icon: Icons.edit_note_outlined,
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Будь ласка, введіть назву';
+                  }
+                  return null;
+                },
               ),
-            ),
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(fontSize: 14),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Будь ласка, введіть назву';
-              }
-              return null;
-            },
+            ],
           ),
         ),
+        actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, null),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
             child: Text(
               cancelText,
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(color: Colors.black54),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           ElevatedButton(
@@ -156,10 +175,17 @@ class DialogHelpers {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
+              backgroundColor: theme.primaryColor,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: Text(confirmText),
+            child: Text(
+              confirmText,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -171,6 +197,7 @@ class DialogHelpers {
   static Future<Map<String, dynamic>?> showAddStageDialog(
     BuildContext context,
   ) async {
+    final theme = Theme.of(context);
     final nameController = TextEditingController();
     StagePassingMode selectedMode = StagePassingMode.standard;
     final formKey = GlobalKey<FormState>();
@@ -179,7 +206,16 @@ class DialogHelpers {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Новий етап'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: Colors.white,
+
+          title: Text(
+            'Новий етап',
+            style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
+          ),
+
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.9,
             child: Form(
@@ -188,56 +224,81 @@ class DialogHelpers {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
+                  StageAutocompleteField(
                     controller: nameController,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Назва етапу',
-                      hintText: 'Наприклад: Навісна переправа',
-                      border: OutlineInputBorder(),
-                    ),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelMedium?.copyWith(fontSize: 14),
-                    validator: (v) =>
-                        v!.trim().isEmpty ? 'Введіть назву' : null,
+                    validator: (v) => v == null || v.isEmpty
+                        ? 'Оберіть або введіть назву'
+                        : null,
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Особливості проходження:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade400),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<StagePassingMode>(
+
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4, bottom: 6),
+                        child: Text(
+                          'Режим проходження',
+                          style: theme.textTheme.labelMedium,
+                        ),
+                      ),
+                      DropdownButtonFormField<StagePassingMode>(
                         value: selectedMode,
                         isExpanded: true,
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.black54,
+                        ),
+                        style: theme.textTheme.titleMedium,
+
+                        decoration: AppDecorations.inputField(
+                          theme: theme,
+                          hint: '',
+                        ),
+
                         items: StagePassingMode.values.map((mode) {
                           return DropdownMenuItem(
                             value: mode,
-                            child: Text(mode.displayName),
+                            child: Row(
+                              children: [
+                                if (mode.icon != null) ...[
+                                  Icon(
+                                    mode.icon,
+                                    size: 18,
+                                    color: theme.primaryColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Text(mode.displayName),
+                              ],
+                            ),
                           );
                         }).toList(),
                         onChanged: (val) {
                           if (val != null) setState(() => selectedMode = val);
                         },
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+          actionsPadding: const EdgeInsets.only(
+            bottom: 16,
+            right: 16,
+            left: 16,
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Скасувати'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey.shade600,
+              ),
+              child: const Text(
+                'Скасувати',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -249,10 +310,20 @@ class DialogHelpers {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: theme.primaryColor,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
-              child: const Text('Додати'),
+              child: const Text(
+                'Додати',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),

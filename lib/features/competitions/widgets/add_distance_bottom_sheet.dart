@@ -103,7 +103,7 @@ class _AddDistanceBottomSheetState
                 ),
                 decoration: AppDecorations.inputField(
                   theme: theme,
-                  label: 'Тип',
+                  hint: 'Тип',
                   icon: Icons.category_outlined,
                 ),
                 items: DistanceType.values
@@ -129,7 +129,7 @@ class _AddDistanceBottomSheetState
                       ),
                       decoration: AppDecorations.inputField(
                         theme: theme,
-                        label: 'Клас',
+                        hint: 'Клас',
                         icon: Icons.category_outlined,
                       ),
                       items: List.generate(6, (i) => i + 1)
@@ -154,7 +154,7 @@ class _AddDistanceBottomSheetState
                       ),
                       decoration: AppDecorations.inputField(
                         theme: theme,
-                        label: 'Вид',
+                        hint: 'Вид',
                         icon: Icons.category_outlined,
                       ),
                       items: DistanceView.values
@@ -183,7 +183,7 @@ class _AddDistanceBottomSheetState
                 initialValue: widget.initialDistance?.description,
                 decoration: AppDecorations.inputField(
                   theme: theme,
-                  label: 'Додаткова інформація (опціонально)',
+                  hint: 'Додаткова інформація (опціонально)',
                   icon: Icons.notes_outlined,
                   borderRadius: 20.0,
                   alignLabelWithHint: true,

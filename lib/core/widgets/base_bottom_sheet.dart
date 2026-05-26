@@ -28,7 +28,7 @@ class BaseBottomSheet extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor ?? theme.scaffoldBackgroundColor,
+        color: backgroundColor ?? Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset + 20),

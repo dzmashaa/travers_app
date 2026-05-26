@@ -31,6 +31,11 @@ final theme = ThemeData(
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
+      titleMedium: GoogleFonts.roboto(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        color: const Color(0xFF0D2B11),
+      ),
       bodyLarge: GoogleFonts.roboto(
         fontSize: 18,
         fontWeight: FontWeight.w500,
@@ -38,7 +43,12 @@ final theme = ThemeData(
       ),
       bodyMedium: GoogleFonts.roboto(fontSize: 14, color: Colors.black54),
       bodySmall: GoogleFonts.roboto(fontSize: 12, color: Colors.black54),
-      labelLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+      labelLarge: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w600),
+      labelMedium: GoogleFonts.roboto(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey.shade700,
+      ),
     ),
   ),
 );

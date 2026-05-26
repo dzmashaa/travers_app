@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:travers_app/core/utils/app_decorations.dart';
 
 class CustomDateField extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final String valueText;
+  final VoidCallback onTap;
+
   const CustomDateField({
     super.key,
     required this.label,
@@ -9,48 +15,39 @@ class CustomDateField extends StatelessWidget {
     required this.onTap,
   });
 
-  final String label;
-  final IconData icon;
-  final String valueText;
-  final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderRadius = BorderRadius.circular(30);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: borderRadius,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          prefixIcon: Icon(icon, color: Colors.black54),
-          label: Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black45),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: const BorderSide(color: Colors.black12),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: const BorderSide(color: Colors.black12),
+    final isPlaceholder = valueText == 'дд.мм.рррр';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: Text(label, style: theme.textTheme.labelMedium),
+        ),
+
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: InputDecorator(
+            decoration: AppDecorations.inputField(
+              theme: theme,
+              hint: '',
+              icon: icon,
+            ),
+            child: Text(
+              valueText,
+              style: isPlaceholder
+                  ? theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                    )
+                  : theme.textTheme.titleMedium,
+            ),
           ),
         ),
-        child: Text(
-          valueText,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: valueText == 'дд.мм.рррр' ? Colors.black45 : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

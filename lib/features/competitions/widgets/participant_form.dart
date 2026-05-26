@@ -139,30 +139,35 @@ class _ParticipantFormBottomSheetState
       title: isEdit ? 'Редагувати учасника' : 'Додати учасника',
 
       bottomButton: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (isEdit) ...[
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _isSaving ? null : _handleDelete,
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red,
+                ),
+                label: const Text(
+                  'Видалити учасника',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.red.shade50,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-              icon: const Icon(
-                Icons.delete_outline_rounded,
-                color: Colors.redAccent,
-              ),
-              label: const Text(
-                'Видалити учасника',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
-                ),
-              ),
-              onPressed: _isSaving ? null : _handleDelete,
             ),
+            const SizedBox(height: 12),
           ],
           PrimarySubmitButton(
             text: isEdit ? 'Зберегти зміни' : 'Додати учасника',
@@ -175,7 +180,7 @@ class _ParticipantFormBottomSheetState
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: EdgeInsets.zero,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -294,41 +299,54 @@ class _GenderSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Стать:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: Text('Стать', style: theme.textTheme.labelMedium),
+        ),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
           ),
-          Row(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Radio<Gender>(
-                value: Gender.male,
-                groupValue: selectedGender,
-                activeColor: Theme.of(context).primaryColor,
-                onChanged: (v) => onChanged(v!),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio<Gender>(
+                    value: Gender.male,
+                    groupValue: selectedGender,
+                    activeColor: theme.primaryColor,
+                    onChanged: (v) => onChanged(v!),
+                  ),
+                  Text('Чоловіча', style: theme.textTheme.titleMedium),
+                ],
               ),
-              const Text('Ч', style: TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(width: 16),
-              Radio<Gender>(
-                value: Gender.female,
-                groupValue: selectedGender,
-                activeColor: Theme.of(context).primaryColor,
-                onChanged: (v) => onChanged(v!),
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio<Gender>(
+                    value: Gender.female,
+                    groupValue: selectedGender,
+                    activeColor: theme.colorScheme.secondary,
+                    onChanged: (v) => onChanged(v!),
+                  ),
+                  Text('Жіноча', style: theme.textTheme.titleMedium),
+                ],
               ),
-              const Text('Ж', style: TextStyle(fontWeight: FontWeight.w500)),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

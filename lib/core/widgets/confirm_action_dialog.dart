@@ -21,35 +21,43 @@ class ConfirmActionDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return AlertDialog(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+
       title: Text(
         title,
-        style: theme.textTheme.displayMedium?.copyWith(fontSize: 20),
+        style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
       ),
-      content: Text(content),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+
+      content: Text(content, style: theme.textTheme.bodyMedium),
+
+      actionsPadding: const EdgeInsets.only(bottom: 16, right: 16, left: 16),
+
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
+          style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
           child: Text(
             cancelText,
-            style: theme.textTheme.labelLarge?.copyWith(color: Colors.black54),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
+
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
             backgroundColor: confirmColor ?? theme.colorScheme.error,
+            foregroundColor: Colors.white,
             elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           child: Text(
             confirmText,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
       ],

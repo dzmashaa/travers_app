@@ -226,7 +226,7 @@ class _ParticipantDetailsBottomSheetState
                   ),
                   MetricColumn(
                     title: 'Штрафи',
-                    value: '${state.result.totalPenalties} б.',
+                    value: state.result.totalPenalties.toString(),
                     valueColor: Colors.red.shade700,
                     alignment: CrossAxisAlignment.end,
                   ),
