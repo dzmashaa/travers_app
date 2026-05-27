@@ -1,4 +1,7 @@
 allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+    }
     repositories {
         google()
         mavenCentral()
