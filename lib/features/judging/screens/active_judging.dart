@@ -84,6 +84,7 @@ class _ActiveJudgingScreenState extends ConsumerState<ActiveJudgingScreen> {
         );
       });
       if (rule.mustFix) {
+        if (!mounted) return;
         SnackbarUtils.show(
           context,
           'Учасник зобов\'язаний виправити помилку "${rule.code}" на етапі!',

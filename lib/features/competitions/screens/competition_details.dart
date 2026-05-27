@@ -54,6 +54,7 @@ class CompetitionDetailsScreen extends ConsumerWidget {
     );
 
     if (!shouldDelete) return;
+    if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     final primaryColor = Theme.of(context).primaryColor;
 

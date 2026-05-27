@@ -178,7 +178,7 @@ class _ParticipantDetailsBottomSheetState
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop || !state.hasChanges) return;
         final shouldPop = await _onWillPop(state.hasChanges);
-        if (shouldPop && mounted) {
+        if (shouldPop && context.mounted) {
           Navigator.of(context).pop();
         }
       },

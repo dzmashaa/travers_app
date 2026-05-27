@@ -202,7 +202,7 @@ class StageBlockCard extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: block.judgeIds!.map((judgeId) {
+              children: block.judgeIds.map((judgeId) {
                 final judgeName = judgesMap[judgeId] ?? 'Завантаження...';
 
                 return JudgeChip(

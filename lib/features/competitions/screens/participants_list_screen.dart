@@ -54,7 +54,8 @@ class _ParticipantsListScreenState
                   final count = await ref
                       .read(participantsRepositoryProvider)
                       .importFromCsv(widget.competitionId);
-                  if (mounted && count > 0) {
+                  if (!context.mounted) return;
+                  if (count > 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Успішно імпортовано $count учасників'),

@@ -34,10 +34,11 @@ class JudgingTimerController extends ChangeNotifier {
   }
 
   void toggle() {
-    if (isRunning)
+    if (isRunning) {
       pause();
-    else
+    } else {
       start();
+    }
   }
 
   void reset() {

@@ -144,7 +144,8 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
     Map<String, String> judgesMap,
   ) async {
     final hasConnection = await NetworkHelper.hasInternet();
-    if (!hasConnection && context.mounted) {
+    if (!mounted) return;
+    if (!hasConnection) {
       SnackbarUtils.show(
         context,
         'Для розподілу суддів потрібен Інтернет, щоб синхронізувати списки.',
@@ -163,7 +164,7 @@ class _DistanceBuilderScreenState extends ConsumerState<DistanceBuilderScreen> {
       ),
     );
 
-    if (result == null || !context.mounted) return;
+    if (result == null || !mounted) return;
 
     try {
       ref

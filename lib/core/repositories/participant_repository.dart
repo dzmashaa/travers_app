@@ -112,8 +112,9 @@ class ParticipantsRepository {
       for (int i = 1; i < fields.length; i++) {
         final row = fields[i];
 
-        if (row.isEmpty || row.length < 7 || row[1].toString().isEmpty)
+        if (row.isEmpty || row.length < 7 || row[1].toString().isEmpty) {
           continue;
+        }
 
         final docRef = _getCollection(compId).doc();
 

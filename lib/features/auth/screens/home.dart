@@ -93,6 +93,7 @@ class HomeScreen extends ConsumerWidget {
                     await ref
                         .read(roleProvider.notifier)
                         .setRole(UserRole.participant);
+                    if (!context.mounted) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(

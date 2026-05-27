@@ -124,7 +124,7 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
       if (enteredCode == AppConstants.headJudgeAccessCode) {
         finalRole = UserRole.headJudge;
       } else {
-        if (enteredCode != null) {
+        if (enteredCode != null && mounted) {
           SnackbarUtils.show(
             context,
             'Невірний код організатора!',

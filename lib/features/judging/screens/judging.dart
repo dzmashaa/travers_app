@@ -66,7 +66,8 @@ class JudgingScreen extends ConsumerWidget {
             ? null
             : () async {
                 final hasConnection = await NetworkHelper.hasInternet();
-                if (!hasConnection && context.mounted) {
+                if (!context.mounted) return;
+                if (!hasConnection) {
                   SnackbarUtils.show(
                     context,
                     'Для приєднання до змагання необхідне підключення до Інтернету.',
