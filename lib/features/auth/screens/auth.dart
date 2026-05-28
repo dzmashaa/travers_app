@@ -4,6 +4,7 @@ import 'package:travers_app/core/models/user_role.dart';
 import 'package:travers_app/core/utils/network_helper.dart';
 import 'package:travers_app/features/auth/auth_provider.dart';
 import 'package:travers_app/core/providers/role_provider.dart';
+import 'package:travers_app/features/auth/auth_service.dart';
 import 'package:travers_app/features/navigation/main_shell.dart';
 import 'package:travers_app/core/utils/app_constants.dart';
 import 'package:travers_app/core/utils/dialog_helpers.dart';
@@ -91,61 +92,63 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _handleRoleAndNavigation() async {
     final authService = ref.read(authServiceProvider);
-
-    UserRole existingRole = UserRole.judge;
-    try {
-      final fetchedRole = await authService.getUserRole();
-      if (fetchedRole != null) {
-        existingRole = fetchedRole;
-      }
-    } catch (e) {
-      debugPrint('Помилка отримання ролі: $e');
-    }
+    final existingRole = await _fetchCurrentRole(authService);
 
     UserRole finalRole = existingRole;
-    bool askForCode = false;
-    if (widget.wantsHeadJudgeRole) {
-      if (existingRole == UserRole.headJudge) {
-        askForCode = false;
-      } else {
-        askForCode = true;
-      }
-    }
-    if (askForCode && mounted) {
-      final enteredCode = await DialogHelpers.showAccessCodeDialog(
-        context,
-        title: 'Код організатора',
-        message:
-            'Введіть спеціальний код для доступу до функцій Головного судді.',
-        cancelText: 'Продовжити як Суддя',
-        barrierDismissible: false,
-      );
 
-      if (enteredCode == AppConstants.headJudgeAccessCode) {
-        finalRole = UserRole.headJudge;
-      } else {
-        if (enteredCode != null && mounted) {
-          SnackbarUtils.show(
-            context,
-            'Невірний код організатора!',
-            isError: true,
-          );
-        }
-        finalRole = UserRole.judge;
-      }
+    if (widget.wantsHeadJudgeRole && existingRole != UserRole.headJudge) {
+      finalRole = await _verifyHeadJudgeCode() ?? UserRole.judge;
     }
+
+    await _updateAndNavigate(authService, finalRole);
+  }
+
+  Future<UserRole> _fetchCurrentRole(AuthService authService) async {
+    try {
+      return await authService.getUserRole() ?? UserRole.judge;
+    } catch (e) {
+      debugPrint('Помилка отримання ролі: $e');
+      return UserRole.judge;
+    }
+  }
+
+  Future<UserRole?> _verifyHeadJudgeCode() async {
+    final enteredCode = await DialogHelpers.showAccessCodeDialog(
+      context,
+      title: 'Код організатора',
+      message:
+          'Введіть спеціальний код для доступу до функцій Головного судді.',
+      cancelText: 'Продовжити як Суддя',
+      barrierDismissible: false,
+    );
+
+    if (enteredCode == AppConstants.headJudgeAccessCode) {
+      return UserRole.headJudge;
+    }
+
+    if (enteredCode != null && mounted) {
+      SnackbarUtils.show(context, 'Невірний код організатора!', isError: true);
+    }
+    return UserRole.judge;
+  }
+
+  Future<void> _updateAndNavigate(
+    AuthService authService,
+    UserRole role,
+  ) async {
     try {
       await authService.updateUserRole(
-        finalRole,
+        role,
         fallbackName: _nameController.text.trim(),
       );
     } catch (e) {
       if (mounted) SnackbarUtils.show(context, e.toString(), isError: true);
       return;
     }
+
     if (!mounted) return;
     setState(() => _isLoading = false);
-    _navigateToCompetitions(finalRole);
+    _navigateToCompetitions(role);
   }
 
   void _navigateToCompetitions(UserRole role) async {
@@ -153,7 +156,7 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MainShell()),
+      MaterialPageRoute(builder: (context) => const MainShell()),
     );
   }
 
@@ -245,151 +248,160 @@ class AuthScreenState extends ConsumerState<AuthScreen> {
           key: _formKey,
           child: Column(
             children: [
-              Text(
-                _isLogin ? 'Вхід' : 'Реєстрація',
-                style: theme.textTheme.bodyLarge?.copyWith(fontSize: 28),
-              ),
+              _buildHeader(theme),
               const SizedBox(height: 24),
-              if (!_isLogin) ...[
-                CustomTextField(
-                  controller: _nameController,
-                  key: const ValueKey('name_field'),
-                  label: 'Ім\'я та прізвище',
-                  icon: Icons.person_outline,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Будь ласка, введіть ім\'я'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-              ],
-              CustomTextField(
-                controller: _emailController,
-                key: const ValueKey('email_field'),
-                label: 'Електронна пошта',
-                icon: Icons.mail_outline,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Введіть email';
-                  if (!value.contains('@')) return 'Введіть коректний email';
-                  return null;
-                },
-              ),
+              _buildInputFields(theme),
               const SizedBox(height: 16),
-              CustomTextField(
-                controller: _passwordController,
-                key: const ValueKey('password_field'),
-                label: 'Пароль',
-                icon: Icons.lock_outline,
-                isPassword: true,
-                validator: (value) => value != null && value.length < 6
-                    ? 'Пароль має бути від 6 символів'
-                    : null,
-              ),
-              if (_isLogin)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _resetPassword,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      minimumSize: Size.zero,
-                    ),
-                    child: Text(
-                      'Забули пароль?',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                ),
-              if (!_isLogin) ...[
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  key: const ValueKey('confirm_password_field'),
-                  label: 'Підтвердження паролю',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (value) => value != _passwordController.text
-                      ? 'Паролі не співпадають'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-              ],
-              SizedBox(
-                width: 250,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.secondary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    textStyle: theme.textTheme.labelLarge,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(_isLogin ? 'Увійти' : 'Зареєструватися'),
-                ),
-              ),
+              _buildSubmitButton(theme),
               const SizedBox(height: 4),
-              TextButton(
-                onPressed: () => setState(() => _isLogin = !_isLogin),
-                child: RichText(
-                  text: TextSpan(
-                    style: theme.textTheme.bodyMedium,
-                    children: [
-                      TextSpan(
-                        text: _isLogin
-                            ? 'Не маєте акаунту? '
-                            : 'Вже маєте акаунт? ',
-                      ),
-                      TextSpan(
-                        text: _isLogin ? 'Зареєструватися' : 'Увійти',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildToggleAuthModeButton(theme),
               const Text('або', style: TextStyle(color: Colors.black45)),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: _isLoading ? null : _googleAuth,
-                icon: Image.asset('assets/search.png', height: 20),
-                label: const Text(
-                  'Продовжити з Google',
-                  style: TextStyle(color: Colors.black87),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+              _buildGoogleButton(),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputFields(ThemeData theme) {
+    return Column(
+      children: [
+        if (!_isLogin) ...[
+          CustomTextField(
+            controller: _nameController,
+            key: const ValueKey('name_field'),
+            label: 'Ім\'я та прізвище',
+            icon: Icons.person_outline,
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Будь ласка, введіть ім\'я'
+                : null,
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        CustomTextField(
+          controller: _emailController,
+          key: const ValueKey('email_field'),
+          label: 'Електронна пошта',
+          icon: Icons.mail_outline,
+          keyboardType: TextInputType.emailAddress,
+          validator: _validateEmail,
+        ),
+        const SizedBox(height: 16),
+
+        CustomTextField(
+          controller: _passwordController,
+          key: const ValueKey('password_field'),
+          label: 'Пароль',
+          icon: Icons.lock_outline,
+          isPassword: true,
+          validator: (value) => (value != null && value.length < 6)
+              ? 'Пароль має бути від 6 символів'
+              : null,
+        ),
+
+        if (_isLogin) _buildForgotPasswordButton(theme),
+
+        if (!_isLogin) ...[
+          const SizedBox(height: 16),
+          CustomTextField(
+            controller: _confirmPasswordController,
+            key: const ValueKey('confirm_password_field'),
+            label: 'Підтвердження паролю',
+            icon: Icons.lock_outline,
+            isPassword: true,
+            validator: (value) => value != _passwordController.text
+                ? 'Паролі не співпадають'
+                : null,
+          ),
+        ],
+      ],
+    );
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Введіть email';
+    if (!value.contains('@')) return 'Введіть коректний email';
+    return null;
+  }
+
+  Widget _buildForgotPasswordButton(ThemeData theme) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: _resetPassword,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          minimumSize: Size.zero,
+        ),
+        child: Text(
+          'Забули пароль?',
+          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black54),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(ThemeData theme) {
+    return SizedBox(
+      width: 250,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.secondary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          textStyle: theme.textTheme.labelLarge,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(40),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(_isLogin ? 'Увійти' : 'Зареєструватися'),
+      ),
+    );
+  }
+
+  Widget _buildToggleAuthModeButton(ThemeData theme) {
+    return TextButton(
+      onPressed: () => setState(() => _isLogin = !_isLogin),
+      child: RichText(
+        text: TextSpan(
+          style: theme.textTheme.bodyMedium,
+          children: [
+            TextSpan(
+              text: _isLogin ? 'Не маєте акаунту? ' : 'Вже маєте акаунт? ',
+            ),
+            TextSpan(
+              text: _isLogin ? 'Зареєструватися' : 'Увійти',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleButton() {
+    return OutlinedButton.icon(
+      onPressed: _isLoading ? null : _googleAuth,
+      icon: Image.asset('assets/search.png', height: 20),
+      label: const Text(
+        'Продовжити з Google',
+        style: TextStyle(color: Colors.black87),
       ),
     );
   }
