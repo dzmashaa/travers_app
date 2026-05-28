@@ -37,168 +37,149 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final competitionAsync = ref.watch(
       competitionStreamProvider(widget.competitionId),
     );
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.competitionName,
-              style: theme.textTheme.displayMedium?.copyWith(
-                fontSize: 22,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 4),
-            competitionAsync.when(
-              data: (competition) => competition != null
-                  ? CompStatusBadge(status: competition.status)
-                  : const SizedBox.shrink(),
-              loading: () => const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      ),
+      appBar: _buildAppBar(theme, competitionAsync),
       body: competitionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Помилка: $error')),
-        data: (competition) {
-          if (competition == null) {
-            return const Center(child: Text('Змагання не знайдено'));
-          }
+        error: (error, _) => Center(child: Text('Помилка: $error')),
+        data: (competition) => _buildCompetitionBody(competition),
+      ),
+    );
+  }
 
-          final distances = competition.distances;
+  PreferredSizeWidget _buildAppBar(
+    ThemeData theme,
+    AsyncValue<CompetitionModel?> comp,
+  ) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.competitionName,
+            style: const TextStyle(fontSize: 22, color: Colors.black87),
+          ),
+          comp.when(
+            data: (c) => c != null
+                ? CompStatusBadge(status: c.status)
+                : const SizedBox.shrink(),
+            loading: () => const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+    );
+  }
 
-          if (distances.isEmpty) {
-            return const Center(
-              child: Text('У цьому змаганні ще немає дистанцій'),
-            );
-          }
+  Widget _buildCompetitionBody(CompetitionModel? competition) {
+    if (competition == null) {
+      return const Center(child: Text('Змагання не знайдено'));
+    }
+    if (competition.distances.isEmpty) {
+      return const Center(child: Text('Ще немає дистанцій'));
+    }
 
-          return Column(
-            children: [
-              Container(
-                height: 40,
-                margin: const EdgeInsets.only(top: 16, bottom: 16),
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: distances.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return AppFilterChip(
-                        label: 'Загальний залік',
-                        isSelected: _isOverallStandings,
-                        onTap: () => setState(() {
-                          _isOverallStandings = true;
-                          _isTeamView = false;
-                          _selectedGenderFilter = GenderFilter.all;
-                        }),
-                      );
-                    }
-                    final distance = distances[index - 1];
-                    final isSelected =
-                        !_isOverallStandings &&
-                        (_selectedDistance?.id == distance.id);
-
-                    return AppFilterChip(
-                      label: distance.type.displayName,
-                      isSelected: isSelected,
-                      onTap: () {
-                        setState(() {
-                          _isOverallStandings = false;
-                          _selectedDistance = distance;
-                          _isTeamView = false;
-                          _selectedGenderFilter = GenderFilter.all;
-                        });
-                      },
-                    );
-                  },
+    return Column(
+      children: [
+        _buildDistanceSelector(competition.distances),
+        if (!_isOverallStandings && _selectedDistance != null)
+          _buildSubFilters(_selectedDistance!),
+        AppSearchField(
+          hintText: 'Пошук...',
+          onChanged: (v) => setState(() => _searchQuery = v),
+        ),
+        _buildTableHeader(),
+        Expanded(
+          child: _isOverallStandings
+              ? _buildOverallStandingsList()
+              : _buildLeaderboardList(
+                  _selectedDistance ?? competition.distances.first,
+                  competition,
                 ),
-              ),
+        ),
+      ],
+    );
+  }
 
-              if (!_isOverallStandings && _selectedDistance != null)
-                _buildSubFilters(_selectedDistance!),
+  Widget _buildDistanceSelector(List<Distance> distances) {
+    return Container(
+      height: 40,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: distances.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final isOverall = index == 0;
+          final distance = isOverall ? null : distances[index - 1];
+          final isSelected = isOverall
+              ? _isOverallStandings
+              : (_selectedDistance?.id == distance?.id);
 
-              AppSearchField(
-                hintText: 'Пошук учасника...',
-                onChanged: (value) => setState(() => _searchQuery = value),
-              ),
-
-              const SizedBox(height: 16),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Row(
-                  children: [
-                    const Text(
-                      '#',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        _isOverallStandings
-                            ? 'КОМАНДА / РЕГІОН'
-                            : 'ПІБ / КОМАНДА',
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      _isOverallStandings ? 'СУМА ВІДСОТКІВ' : 'ЧАС / ШТРАФИ',
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Expanded(
-                child: _isOverallStandings
-                    ? _buildOverallStandingsList()
-                    : _buildLeaderboardList(
-                        _selectedDistance ?? distances.first,
-                        competition,
-                      ),
-              ),
-            ],
+          return AppFilterChip(
+            label: isOverall ? 'Загальний залік' : distance!.type.displayName,
+            isSelected: isSelected,
+            onTap: () => setState(() {
+              _isOverallStandings = isOverall;
+              if (!isOverall) _selectedDistance = distance;
+              _isTeamView = false;
+              _selectedGenderFilter = GenderFilter.all;
+            }),
           );
         },
       ),
     );
   }
+
+  Widget _buildTableHeader() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+    child: Row(
+      children: [
+        const Text(
+          '#',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            _isOverallStandings ? 'КОМАНДА / РЕГІОН' : 'ПІБ / КОМАНДА',
+            style: _headerStyle,
+          ),
+        ),
+        Text(
+          _isOverallStandings ? 'СУМА ВІДСОТКІВ' : 'ЧАС / ШТРАФИ',
+          style: _headerStyle,
+        ),
+      ],
+    ),
+  );
+
+  static const _headerStyle = TextStyle(
+    color: Colors.grey,
+    fontSize: 12,
+    fontWeight: FontWeight.bold,
+  );
 
   Widget _buildSubFilters(Distance distance) {
     if (distance.view == DistanceView.team) return const SizedBox.shrink();
