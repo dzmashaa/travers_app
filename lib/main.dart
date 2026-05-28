@@ -67,7 +67,7 @@ void main() async {
     if (savedRole == UserRole.participant) {
       initialScreen = const CompetitionsScreen();
     } else {
-      initialScreen = MainShell();
+      initialScreen = const MainShell();
     }
   } else {
     initialScreen = const HomeScreen();

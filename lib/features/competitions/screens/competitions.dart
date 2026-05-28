@@ -85,7 +85,7 @@ class _CompetitionsScreenState extends ConsumerState<CompetitionsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FilterBar(),
+            const FilterBar(),
             const SizedBox(height: 12),
             AppSearchField(
               hintText: 'Пошук за назвою чи локацією...',
