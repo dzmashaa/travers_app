@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:travers_app/core/models/stage.dart';
 import 'package:travers_app/core/utils/app_decorations.dart';
 import 'package:travers_app/core/utils/snackbar_utils.dart';
-import 'package:travers_app/features/competitions/widgets/stage_autocomplete_field.dart';
+import 'package:travers_app/core/widgets/add_stage_dialog.dart';
 import '../widgets/confirm_action_dialog.dart';
 
 class DialogHelpers {
+  static const String cancelLabel = 'Скасувати';
   static Future<bool> showConfirmDialog(
     BuildContext context, {
     required String title,
@@ -28,7 +29,7 @@ class DialogHelpers {
     BuildContext context, {
     required String title,
     required String message,
-    String cancelText = 'Скасувати',
+    String cancelText = DialogHelpers.cancelLabel,
     String confirmText = 'Підтвердити',
     bool barrierDismissible = true,
   }) async {
@@ -114,7 +115,7 @@ class DialogHelpers {
     required String title,
     required String hintText,
     String confirmText = 'Зберегти',
-    String cancelText = 'Скасувати',
+    String cancelText = DialogHelpers.cancelLabel,
   }) async {
     final theme = Theme.of(context);
     final controller = TextEditingController();
@@ -216,73 +217,9 @@ class DialogHelpers {
             style: theme.textTheme.displayMedium?.copyWith(fontSize: 22),
           ),
 
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.9,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  StageAutocompleteField(
-                    controller: nameController,
-                    validator: (v) => v == null || v.isEmpty
-                        ? 'Оберіть або введіть назву'
-                        : null,
-                  ),
-
-                  const SizedBox(height: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 4, bottom: 6),
-                        child: Text(
-                          'Режим проходження',
-                          style: theme.textTheme.labelMedium,
-                        ),
-                      ),
-                      DropdownButtonFormField<StagePassingMode>(
-                        value: selectedMode,
-                        isExpanded: true,
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.black54,
-                        ),
-                        style: theme.textTheme.titleMedium,
-
-                        decoration: AppDecorations.inputField(
-                          theme: theme,
-                          hint: '',
-                        ),
-
-                        items: StagePassingMode.values.map((mode) {
-                          return DropdownMenuItem(
-                            value: mode,
-                            child: Row(
-                              children: [
-                                if (mode.icon != null) ...[
-                                  Icon(
-                                    mode.icon,
-                                    size: 18,
-                                    color: theme.primaryColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                                Text(mode.displayName),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => selectedMode = val);
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          content: AddStageDialogContent(
+            nameController: nameController,
+            formKey: formKey,
           ),
           actionsPadding: const EdgeInsets.only(
             bottom: 16,
@@ -296,7 +233,7 @@ class DialogHelpers {
                 foregroundColor: Colors.grey.shade600,
               ),
               child: const Text(
-                'Скасувати',
+                DialogHelpers.cancelLabel,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
