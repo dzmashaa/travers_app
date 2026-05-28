@@ -47,58 +47,56 @@ JudgingTarget _buildJudgingTarget(
   DistanceView view,
   List<ParticipantModel> participants,
 ) {
-  if (view == DistanceView.individual) {
-    final p = participants.where((p) => p.id == targetId).firstOrNull;
-    return p != null
-        ? JudgingTarget.fromParticipant(p)
-        : JudgingTarget(id: targetId, title: 'Невідомий', subtitle: 'Особиста');
-  } else if (view == DistanceView.team) {
-    String displayTitle = targetId.replaceAll('team_', '').trim();
-    final teamMember = participants
-        .where((p) => p.teamName == targetId)
-        .firstOrNull;
-
-    String subtitle = 'Команда';
-    if (teamMember?.coachName.isNotEmpty == true) {
-      subtitle = 'Команда • ${teamMember?.coachName}';
-    }
-    return JudgingTarget(
-      id: targetId,
-      title: displayTitle,
-      subtitle: subtitle,
-      region: teamMember?.region ?? '',
-    );
-  } else {
-    final ids = targetId.split(',');
-    final p1 = ids.isNotEmpty
-        ? participants.where((p) => p.id == ids.first.trim()).firstOrNull
-        : null;
-    final p2 = ids.length > 1
-        ? participants.where((p) => p.id == ids.last.trim()).firstOrNull
-        : null;
-
-    String getShortName(String? fullName) {
-      if (fullName == null || fullName.isEmpty) return 'Невідомий';
-      return fullName.trim().split(' ').first;
-    }
-
-    String combinedRegion = '';
-    if (p1 != null && p2 != null) {
-      if (p1.region == p2.region) {
-        combinedRegion = p1.region;
-      } else {
-        combinedRegion = '${p1.region} / ${p2.region}';
-      }
-    }
-
-    return JudgingTarget(
-      id: targetId,
-      title: '${getShortName(p1?.name)} / ${getShortName(p2?.name)}',
-      subtitle: 'Зв\'язка',
-      region: combinedRegion,
-    );
+  switch (view) {
+    case DistanceView.individual:
+      return _buildIndividualTarget(targetId, participants);
+    case DistanceView.team:
+      return _buildTeamTarget(targetId, participants);
+    case DistanceView.pair:
+      return _buildPairTarget(targetId, participants);
   }
 }
+
+JudgingTarget _buildIndividualTarget(String id, List<ParticipantModel> p) {
+  final participant = p.where((item) => item.id == id).firstOrNull;
+  return participant != null
+      ? JudgingTarget.fromParticipant(participant)
+      : JudgingTarget(id: id, title: 'Невідомий', subtitle: 'Особиста');
+}
+
+JudgingTarget _buildTeamTarget(String id, List<ParticipantModel> p) {
+  final teamMember = p.where((item) => item.teamName == id).firstOrNull;
+  return JudgingTarget(
+    id: id,
+    title: id.replaceAll('team_', '').trim(),
+    subtitle: teamMember?.coachName.isNotEmpty == true
+        ? 'Команда • ${teamMember!.coachName}'
+        : 'Команда',
+    region: teamMember?.region ?? '',
+  );
+}
+
+JudgingTarget _buildPairTarget(String id, List<ParticipantModel> p) {
+  final ids = id.split(',');
+  final p1 = p.where((item) => item.id == ids.first.trim()).firstOrNull;
+  final p2 = ids.length > 1
+      ? p.where((item) => item.id == ids.last.trim()).firstOrNull
+      : null;
+
+  String combinedRegion = (p1 != null && p2 != null)
+      ? (p1.region == p2.region ? p1.region : '${p1.region} / ${p2.region}')
+      : '';
+
+  return JudgingTarget(
+    id: id,
+    title: '${_getShortName(p1?.name)} & ${_getShortName(p2?.name)}',
+    subtitle: 'Зв\'язка',
+    region: combinedRegion,
+  );
+}
+
+String _getShortName(String? name) =>
+    (name == null || name.isEmpty) ? 'Невідомий' : name.trim().split(' ').first;
 
 String _getTeamName(
   AggregatedResult res,
@@ -360,9 +358,6 @@ final overallStandingsProvider =
       }
 
       final comp = compAsync.value;
-      final participants = participantsAsync.value ?? [];
-      final allResults = resultsAsync.value ?? [];
-
       if (comp == null || comp.distances.isEmpty) {
         return const AsyncValue.data([]);
       }
@@ -371,57 +366,13 @@ final overallStandingsProvider =
       final teamBreakdowns = <String, List<DistanceScore>>{};
 
       for (final distance in comp.distances) {
-        final baseResults = _calculateBaseResults(
-          distance: distance,
-          participants: participants,
-          allResults: allResults,
-          penaltyMultiplierMs: getPenaltyMultiplierMs(distance.view),
+        _processDistanceScores(
+          distance,
+          participantsAsync.value ?? [],
+          resultsAsync.value ?? [],
+          teamScores,
+          teamBreakdowns,
         );
-
-        if (baseResults.isEmpty) continue;
-
-        List<AggregatedResult> teamResultsForDistance;
-        if (distance.view == DistanceView.team) {
-          teamResultsForDistance = _calculateDistanceTeamResults(
-            baseResults,
-            distance.view,
-            1,
-            participants,
-          );
-        } else {
-          int topCount = distance.view == DistanceView.individual ? 4 : 2;
-          teamResultsForDistance = _calculateDistanceTeamResults(
-            baseResults,
-            distance.view,
-            topCount,
-            participants,
-          );
-        }
-
-        if (teamResultsForDistance.isEmpty) continue;
-
-        teamResultsForDistance.sort(
-          (a, b) => a.finalCalculatedTimeMs.compareTo(b.finalCalculatedTimeMs),
-        );
-        final bestTime = teamResultsForDistance.first.finalCalculatedTimeMs;
-
-        if (bestTime == 0) continue;
-
-        for (final res in teamResultsForDistance) {
-          final percentage = (res.finalCalculatedTimeMs / bestTime) * 100;
-          final teamName = res.target.title;
-
-          teamScores[teamName] = (teamScores[teamName] ?? 0.0) + percentage;
-          teamBreakdowns
-              .putIfAbsent(teamName, () => [])
-              .add(
-                DistanceScore(
-                  distance.type.displayName,
-                  percentage,
-                  res.finalCalculatedTimeMs,
-                ),
-              );
-        }
       }
 
       final resultList =
@@ -435,3 +386,53 @@ final overallStandingsProvider =
 
       return AsyncValue.data(resultList);
     });
+
+void _processDistanceScores(
+  Distance distance,
+  List<ParticipantModel> participants,
+  List<ResultModel> allResults,
+  Map<String, double> teamScores,
+  Map<String, List<DistanceScore>> teamBreakdowns,
+) {
+  final baseResults = _calculateBaseResults(
+    distance: distance,
+    participants: participants,
+    allResults: allResults,
+    penaltyMultiplierMs: getPenaltyMultiplierMs(distance.view),
+  );
+
+  if (baseResults.isEmpty) return;
+
+  int topCount = distance.view == DistanceView.team
+      ? 1
+      : (distance.view == DistanceView.individual ? 4 : 2);
+  final teamResults = _calculateDistanceTeamResults(
+    baseResults,
+    distance.view,
+    topCount,
+    participants,
+  );
+
+  if (teamResults.isEmpty) return;
+
+  teamResults.sort(
+    (a, b) => a.finalCalculatedTimeMs.compareTo(b.finalCalculatedTimeMs),
+  );
+  final bestTime = teamResults.first.finalCalculatedTimeMs;
+  if (bestTime == 0) return;
+
+  for (final res in teamResults) {
+    final percentage = (res.finalCalculatedTimeMs / bestTime) * 100;
+    teamScores[res.target.title] =
+        (teamScores[res.target.title] ?? 0.0) + percentage;
+    teamBreakdowns
+        .putIfAbsent(res.target.title, () => [])
+        .add(
+          DistanceScore(
+            distance.type.displayName,
+            percentage,
+            res.finalCalculatedTimeMs,
+          ),
+        );
+  }
+}
